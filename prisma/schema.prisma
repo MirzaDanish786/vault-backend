@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model User {
+  id        String    @id @default(uuid()) @map("id")
+  name      String    @map("name")
+  email     String    @unique @map("email")
+  password  String    @map("password")
+  profile   Profile?
+  addresses Address[] // 1:N relation for multiple addresses
+  role      Role      @default(USER) @map("role")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Profile {
+  id        String    @id @default(uuid()) @map("id")
+  avatar    String?   @map("avatar")
+  userId    String    @unique @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+model Address {
+  id         String   @id @default(ulid())
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      Label    @default(OTHER)
+  street     String   @map("street")
+  city       String   @map("city")
+  state      String   @map("state")
+  postalCode String   @map("postal_code")
+  country    String   @map("country")
+  isDefault  Boolean  @default(false) @map("is_default")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("addresses")
+}
+
+enum Label {
+  WORK
+  HOME
+  PARENTS
+  OTHER
+}
+
+enum Role {
+  ADMIN
+  USER
+  SELLER
+}
