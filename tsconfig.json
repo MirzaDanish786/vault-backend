@@ -1,23 +1,35 @@
 {
   "compilerOptions": {
-    /* Type-checking and Modules */
-    "target": "es2020",
+    "target": "ES2020",
     "module": "commonjs",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-
-    /* Source and Output */
+    "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     
-    /* Directory Setup */
-    "resolveJsonModule": true,
-    "sourceMap": true,
+    /* PATH ALIASES - ADD THIS SECTION */
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@config/*": ["config/*"],
+      "@lib/*": ["lib/*"],
+      "@utils/*": ["utils/*"],
+      "@services/*": ["services/*"],
+      "@controllers/*": ["controllers/*"],
+      "@middleware/*": ["middleware/*"],
+      "@types/*": ["types/*"],
+      "@routes/*": ["routes/*"]
+    },
+    /* END PATH ALIASES */
+    
+    /* Module Resolution */
     "moduleResolution": "node",
-    "baseUrl": "." 
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

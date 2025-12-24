@@ -1,18 +1,12 @@
-
-// 1. Load environment variables immediately
-// The 'dotenv/config' import handles this, ensuring process.env is populated 
-// before other modules (like prisma/client) are imported.
 import 'dotenv/config'; 
 
-import app from './app'; // Import the Express application instance from src/app.ts
-import prisma from './prisma/client'; // Import the configured Prisma singleton instance
+import app from './app';
+import prisma from './lib/prisma/client';
+import { env } from './config/env';
+import { logger } from './utils/logger';
 
-// Get the server port from the environment, defaulting to 5000
-const PORT = process.env.PORT || 5000; 
+const PORT = env.PORT; 
 
-/**
- * Initializes the database connection and starts the Express server.
- */
 async function startServer() {
     try {
         // 1. Connect to the Database using the Singleton Prisma Client
@@ -29,7 +23,7 @@ async function startServer() {
 
     } catch (error) {
         // Handle connection or server startup errors
-        console.error('❌ Failed to start server or connect to database:', error);
+        logger.error('❌ Failed to start server or connect to database:', error);
         
         // 3. Ensure the database connection is closed if startup fails
         await prisma.$disconnect();
