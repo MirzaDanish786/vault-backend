@@ -7,15 +7,17 @@ datasource db {
   provider = "postgresql"
 }
 model User {
-  id        String    @id @default(uuid()) @map("id")
+  id        String    @id @map("id") @db.Uuid
   name      String    @map("name")
   email     String    @unique @map("email")
-  password  String    @map("password")
   profile   Profile?
   addresses Address[] // 1:N relation for multiple addresses
   role      Role      @default(USER) @map("role")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@index([email])
+  @@index([role])
 
   @@map("users")
 }
