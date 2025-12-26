@@ -142,7 +142,7 @@ A production-ready Node.js/TypeScript backend for a modern e-commerce platform w
 
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/vault-backend.git
+   git clone https://github.com/MirzaDanish786/vault-backend.git
    cd vault-backend
    ```
 2. Install dependencies
