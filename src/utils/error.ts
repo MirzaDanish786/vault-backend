@@ -1,6 +1,8 @@
+import { StatusCode } from "@/services/auth"
+
 export class ApiError extends Error{
     constructor(
-        public statusCode: number,
+        public statusCode: StatusCode,
         public code: string,
         message: string,
         public details?: unknown

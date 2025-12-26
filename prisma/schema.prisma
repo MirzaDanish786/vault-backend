@@ -23,9 +23,9 @@ model User {
 }
 
 model Profile {
-  id        String    @id @default(uuid()) @map("id")
+  id        String    @id @default(uuid()) @map("id") @db.Uuid
   avatar    String?   @map("avatar")
-  userId    String    @unique @map("user_id")
+  userId    String    @unique @map("user_id") @db.Uuid
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -34,15 +34,15 @@ model Profile {
 }
 
 model Address {
-  id         String   @id @default(ulid())
-  userId     String   @map("user_id")
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  label      Label    @default(OTHER)
-  street     String   @map("street")
-  city       String   @map("city")
-  state      String   @map("state")
-  postalCode String   @map("postal_code")
-  country    String   @map("country")
+  label      Label    @default(HOME)
+  street     String?   @map("street")
+  city       String?   @map("city")
+  state      String?   @map("state")
+  postalCode String?   @map("postal_code")
+  country    String?   @map("country")
   isDefault  Boolean  @default(false) @map("is_default")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -51,6 +51,8 @@ model Address {
 }
 
 enum Label {
+  SHIPPING
+  BILLING
   WORK
   HOME
   PARENTS
