@@ -21,7 +21,7 @@ app.use(
 
 app.use(express.json());
 
-// 🎯 TEST ENDPOINT: Verify all connections
+//  TEST ENDPOINT: Verify all connections
 app.get("/api/test", async (req: Request, res: Response) => {
   try {
     const testResults = {
@@ -76,13 +76,13 @@ async function testDatabaseConnection() {
     const result = await prisma.$queryRaw`SELECT 1 as test`;
     return {
       connected: true,
-      message: "✅ Database connection successful",
+      message: " Database connection successful",
       testResult: result,
     };
   } catch (error) {
     return {
       connected: false,
-      message: "❌ Database connection failed",
+      message: " Database connection failed",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
@@ -97,16 +97,16 @@ async function testSupabaseConnection() {
     
     return {
       connected: true,
-      message: "✅ Supabase connection successful",
+      message: " Supabase connection successful",
       projectUrl: env.SUPABASE_URL,
       keyFormat: env.SUPABASE_SERVICE_ROLE_KEY.startsWith('sb_secret_') 
-        ? '✅ New format (sb_secret_)' 
-        : '❌ Old format',
+        ? ' New format (sb_secret_)' 
+        : ' Old format',
     };
   } catch (error) {
     return {
       connected: false,
-      message: "❌ Supabase connection failed",
+      message: " Supabase connection failed",
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }

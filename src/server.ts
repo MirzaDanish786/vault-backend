@@ -12,18 +12,18 @@ async function startServer() {
         // 1. Connect to the Database using the Singleton Prisma Client
         // This attempts to connect using the Pooler URL (DATABASE_URL)
         await prisma.$connect();
-        console.log('✅ Database connected successfully! (via Prisma/pg adapter)');
+        console.log(' Database connected successfully! (via Prisma/pg adapter)');
 
         // 2. Start the HTTP Server
         // The app instance is now listening for incoming HTTP requests
         app.listen(PORT, () => {
-            console.log(`🚀 Server listening on port: ${PORT}`);
-            console.log(`🔗 API URL: http://localhost:${PORT}`);
+            console.log(` Server listening on port: ${PORT}`);
+            console.log(` API URL: http://localhost:${PORT}`);
         });
 
     } catch (error) {
         // Handle connection or server startup errors
-        logger.error('❌ Failed to start server or connect to database:', error);
+        logger.error(' Failed to start server or connect to database:', error);
         
         // 3. Ensure the database connection is closed if startup fails
         await prisma.$disconnect();
@@ -41,6 +41,6 @@ startServer();
 // (e.g., Ctrl+C in the terminal, or a termination signal from a container orchestrator).
 process.on('SIGINT', async () => {
     await prisma.$disconnect();
-    console.log('\n🛑 Server closed and database connection disconnected.');
+    console.log('\nServer closed and database connection disconnected.');
     process.exit(0);
 });
