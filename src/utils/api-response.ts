@@ -102,7 +102,7 @@ export class ApiResponse<T = any> {
 
   static internalError(
     error?: Error,
-    meta?: { path?: string; requestId?: string }
+    meta?: { path?: string; requestId?: string, method?: string, ip?: string }
   ) {
     return new ApiResponse(false, {
       error: {
