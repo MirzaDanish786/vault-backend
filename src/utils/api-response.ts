@@ -30,7 +30,7 @@ export class ApiResponse<T = any> {
     };
   }
 
-  static success<T>(data: T, meta?: { path?: string; requestId?: string; method?: string; ip?: string }) {
+  static success<T>(data: T, meta?: { path?: string; requestId?: string; method?: string; ip?: string; [key: string]: string | number | NodeJS.MemoryUsage |  undefined}) {
     return new ApiResponse<T>(true, { data, meta });
   }
 
