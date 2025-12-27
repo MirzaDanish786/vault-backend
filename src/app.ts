@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import { supabaseServer } from "./config/supabase/server-client";
 import { errorHandler } from "./middlewares/error.middleware";
 import { ApiError } from "./utils/error";
+import router from "./routes";
 
 dotenv.config();
 
@@ -61,7 +62,6 @@ app.use(express.json());
 
 // Simple root endpoint
 app.get("/", (req: Request, res: Response) => {
-  throw new ApiError(400, "BAD_REQUEST", "Bad request");
   res.json({
     message: "VAULT Backend API is running!",
     endpoints: {
@@ -71,6 +71,10 @@ app.get("/", (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// API Routes
+app.use("/api/v1", router);
+
 
 
 
