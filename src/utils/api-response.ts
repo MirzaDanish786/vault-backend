@@ -35,9 +35,9 @@ export class ApiResponse<T = any> {
   }
 
   static created<T>(data: T, meta?: { path?: string; requestId?: string }) {
-    return new ApiResponse<T>(true, { 
-      data, 
-      meta: { ...meta, status: 'created' } 
+    return new ApiResponse<T>(true, {
+      data,
+      meta: { ...meta, status: 'created' }
     });
   }
 
