@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "@/utils/error";
 import { logger } from "@/utils/logger";
 import { ApiResponse } from "@/utils/api-response";
+import { ErrorCode } from "@/types/error";
 
 export function errorHandler(
   err: unknown,
@@ -18,7 +19,7 @@ export function errorHandler(
   if (err instanceof ApiError) {
     const apiResponse = new ApiResponse(false, {
       error: {
-        code: err.code,
+        code: err.code as ErrorCode,
         message: err.message,
         details: err.details,
       },

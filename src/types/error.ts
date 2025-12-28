@@ -1,0 +1,8 @@
+export type ErrorCode =
+  | 'VALIDATION_ERROR'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'USER_ALREADY_EXISTS'
+  | 'CONFLICT'
+  | 'INTERNAL_SERVER_ERROR';

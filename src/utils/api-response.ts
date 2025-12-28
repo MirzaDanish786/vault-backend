@@ -1,8 +1,10 @@
+import { ErrorCode } from "@/types/error";
+
 export class ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: {
-    code: string;
+    code: ErrorCode;
     message: string;
     details?: unknown;
   };
@@ -17,7 +19,7 @@ export class ApiResponse<T = any> {
     success: boolean,
     options?: {
       data?: T;
-      error?: { code: string; message: string; details?: unknown };
+      error?: { code: ErrorCode; message: string; details?: unknown };
       meta?: { path?: string; requestId?: string; [key: string]: unknown };
     }
   ) {
@@ -42,7 +44,7 @@ export class ApiResponse<T = any> {
   }
 
   static badRequest(
-    code: string,
+    code: ErrorCode,
     message: string,
     details?: unknown,
     meta?: { path?: string; requestId?: string }
@@ -54,7 +56,7 @@ export class ApiResponse<T = any> {
   }
 
   static unauthorized(
-    code: string = 'UNAUTHORIZED',
+    code: ErrorCode = 'UNAUTHORIZED',
     message: string = 'Authentication required',
     meta?: { path?: string; requestId?: string }
   ) {
@@ -65,7 +67,7 @@ export class ApiResponse<T = any> {
   }
 
   static forbidden(
-    code: string = 'FORBIDDEN',
+    code: ErrorCode = 'FORBIDDEN',
     message: string = 'Insufficient permissions',
     meta?: { path?: string; requestId?: string }
   ) {
@@ -89,7 +91,7 @@ export class ApiResponse<T = any> {
   }
 
   static conflict(
-    code: string,
+    code: ErrorCode,
     message: string,
     details?: unknown,
     meta?: { path?: string; requestId?: string }
@@ -106,7 +108,7 @@ export class ApiResponse<T = any> {
   ) {
     return new ApiResponse(false, {
       error: {
-        code: 'INTERNAL_SERVER_ERROR',
+        code: 'INTERNAL_SERVER_ERROR' as ErrorCode,
         message: 'An unexpected error occurred',
         details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
       },

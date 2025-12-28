@@ -14,6 +14,9 @@ import prisma from "@/lib/prisma/client";
 
 export class AuthService {
   async signUp(input: SignUpInput): Promise<AuthResult> {
+    let supabaseUserId: string | null = null;
+    let dbTransactionSucceeded = false;
+
     try {
       const validation = validateSignUpInput(input);
       if (!validation.success) {
@@ -24,13 +27,13 @@ export class AuthService {
           validation.errors
         );
       }
-      const validatedInput: SignUpInput = validation.data!;
+
+      const validatedInput = validation.data!;
 
       const existingUser = await prisma.user.findUnique({
-        where: {
-          email: validatedInput.email,
-        },
+        where: { email: validatedInput.email },
       });
+
       if (existingUser) {
         throw new ApiError(409, "USER_ALREADY_EXISTS", "User already exists");
       }
@@ -45,19 +48,16 @@ export class AuthService {
             role: validatedInput.role || "USER",
           },
         });
-      if (authError) {
-        if (authError.message.includes("already registered")) {
+
+      if (authError || !authData.user) {
+        if (authError?.message.includes("already registered")) {
           throw new ApiError(409, "USER_ALREADY_EXISTS", "User already exists");
         }
-        logger.error("Supabase auth creation failed", { authError });
-        throw new ApiError(500, "AUTH_CREATION_FAILED", authError.message);
-      }
-      if (!authData.user) {
-        logger.error("Supabase user not creation failed");
-        throw new ApiError(500, "NO_USER_CREATED", "Auth user creation failed");
+        throw new ApiError(500, "AUTH_CREATION_FAILED", authError?.message!);
       }
 
-      // Create user in our database:
+      supabaseUserId = authData.user.id;
+
       const user = await prisma.$transaction(async (tx) => {
         const newUser = await tx.user.create({
           data: {
@@ -65,27 +65,23 @@ export class AuthService {
             email: authData.user.email!,
             name: validatedInput.name,
             role: validatedInput.role,
-            profile: {
-              create: {},
-            },
+            profile: { create: {} },
           },
-          include: {
-            profile: true,
-          },
+          include: { profile: true },
         });
+
         return newUser;
       });
 
-      // Get Session:
+      dbTransactionSucceeded = true;
+
       const { data: sessionData, error: sessionError } =
         await supabaseServer.auth.signInWithPassword({
           email: validatedInput.email,
           password: validatedInput.password,
         });
+
       if (sessionError || !sessionData.session) {
-        logger.error("Session creation failed after signup", {
-          error: sessionError,
-        });
         throw new ApiError(
           500,
           "SESSION_CREATION_FAILED",
@@ -110,9 +106,20 @@ export class AuthService {
       logger.error("Signup process failed", {
         error: error instanceof Error ? error.message : "Unknown error",
         email: input.email,
+        supabaseUserId,
+        dbTransactionSucceeded,
       });
 
-      await this.cleanupFailedSignup(input.email);
+      // CLEANUP ONLY IF TRANSACTION FAILED AFTER SUPABASE CREATION
+      if (supabaseUserId && !dbTransactionSucceeded) {
+        await this.cleanupFailedSignup(supabaseUserId);
+      }
+
+      // Preserve original error
+      if (error instanceof ApiError) {
+        throw error;
+      }
+
       throw new ApiError(500, "SIGNUP_FAILED", "Signup process failed");
     }
   }
@@ -197,26 +204,17 @@ export class AuthService {
   }
 
   //   Cleanup method:
-  private async cleanupFailedSignup(email: string) {
+  private async cleanupFailedSignup(userId: string) {
     try {
-      logger.info("Cleaning up failed signup ", { email });
+      logger.info("Cleaning up failed signup", { userId });
 
-      const { data: userList } = await supabaseServer.auth.admin.listUsers();
-      const userToDelete = userList.users.find((u) => u.email === email);
+      await supabaseServer.auth.admin.deleteUser(userId);
 
-      if (userToDelete) {
-        await supabaseServer.auth.admin.deleteUser(userToDelete.id);
-        logger.info("Deleted Supabase user during cleanup", {
-          userId: userToDelete.id,
-        });
-      }
-    } catch (cleanupError) {
+      logger.info("Deleted Supabase user during cleanup", { userId });
+    } catch (error) {
       logger.error("Cleanup failed for signup", {
-        email,
-        error:
-          cleanupError instanceof Error
-            ? cleanupError.message
-            : "Unknown error",
+        userId,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
