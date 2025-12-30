@@ -1,5 +1,5 @@
 import { ApiError } from "@/utils/error";
-import { AuthResult, SupabaseAuthUser } from "./auth.types";
+import { AuthResult, AuthUser, SupabaseAuthUser } from "./auth.types";
 
 import {
   SignInInput,
@@ -11,6 +11,8 @@ import {
 import { supabaseServer } from "@/config/supabase/server-client";
 import { logger } from "@/utils/logger";
 import prisma from "@/lib/prisma/client";
+import { env } from "@/config/env";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 export class AuthService {
   async signUp(input: SignUpInput): Promise<AuthResult> {
@@ -201,6 +203,79 @@ export class AuthService {
 
       throw new ApiError(500, "LOGIN_FAILED", "Login process failed");
     }
+  }
+
+  // Refresh Token method:
+  async refreshToken(refreshToken: string): Promise<AuthResult> {
+    if (!refreshToken) {
+      throw new ApiError(401, "NO_REFRESH_TOKEN", "Refresh token is required");
+    }
+
+    const tempClient = this.createTempSupabaseClient();
+
+    const { data: sessionData, error: refreshError } =
+      await tempClient.auth.refreshSession({ refresh_token: refreshToken });
+
+    if (refreshError) {
+      logger.error("Refresh token validation failed", { error: refreshError });
+
+      if (refreshError.message.includes("invalid refresh token")) {
+        throw new ApiError(
+          401,
+          "INVALID_REFRESH_TOKEN",
+          "Refresh token is invalid or expired"
+        );
+      }
+      throw new ApiError(401, "REFRESH_FAILED", "Failed to refresh session");
+    }
+
+    if (!sessionData.session) {
+      throw new ApiError(
+        500,
+        "NO_SESSION",
+        "No session returned after refresh"
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: sessionData.session.user.id },
+      include: { profile: true },
+    });
+
+    if (!user) {
+      logger.warn("User not found in database after token refresh", {
+        userId: sessionData.session.user.id,
+      });
+      throw new ApiError(404, "USER_NOT_FOUND", "User not found");
+    }
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profile: {
+          id: user.profile?.id ?? "",
+          avatar: user.profile?.avatar ?? null,
+        },
+      },
+      session: sessionData.session,
+    };
+  }
+
+  private createTempSupabaseClient(): SupabaseClient {
+    return createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+          detectSessionInUrl: false,
+        },
+      }
+    );
   }
 
   //   Cleanup method:

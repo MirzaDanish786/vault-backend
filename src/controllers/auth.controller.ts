@@ -1,5 +1,6 @@
 import {
   ACCESS_TOKEN_MAX_AGE,
+  COOKIE_CONFIG,
   REFRESH_TOKEN_MAX_AGE,
 } from "@/config/constants";
 import { isProduction } from "@/config/env";
@@ -21,19 +22,14 @@ export class AuthController {
       const firstError = validation.error.issues[0].message || "Invalid";
       const response = ApiResponse.badRequest(
         "VALIDATION_ERROR",
-        firstError,
-        undefined,
-        { path: req.path, requestId: req.requestId }
+        firstError
       );
       return ApiResponse.send(res, response);
     }
     const validateInput = validation.data!;
     const result = await this.authService.signUp(validateInput);
     this.setAuthCookies(res, result.session);
-    const apiResponse = ApiResponse.created(result.user, {
-      path: req.path,
-      requestId: req.requestId,
-    });
+    const apiResponse = ApiResponse.created(result.user);
 
     logger.info("User signed up successfully", {
       userId: result.user.id,
@@ -44,15 +40,13 @@ export class AuthController {
   };
 
   //   SignIn Controller:
-  signIn = async (req: Request, res: Response):Promise<void> => {
+  signIn = async (req: Request, res: Response): Promise<void> => {
     const validation = signInSchema.safeParse(req.body);
     if (!validation.success) {
       const firstError = validation.error.issues[0].message || "Invalid";
       const response = ApiResponse.badRequest(
         "VALIDATION_ERROR",
-        firstError,
-        undefined,
-        { path: req.path, requestId: req.requestId }
+        firstError
       );
       return ApiResponse.send(res, response);
     }
@@ -60,10 +54,7 @@ export class AuthController {
     const result = await this.authService.signIn(validatedInput);
     this.setAuthCookies(res, result.session);
 
-    const apiResponse = ApiResponse.success(result.user, {
-      path: req.path,
-      requestId: req.requestId,
-    });
+    const apiResponse = ApiResponse.success(result.user);
     logger.info("User signed in successfully", {
       userId: result.user.id,
       requestId: req.requestId,
@@ -75,31 +66,43 @@ export class AuthController {
   //   SignOut Controller:
   signOut = async (req: Request, res: Response) => {
     this.clearAuthCookies(res);
-    const response = ApiResponse.success(undefined, {
+    const response = ApiResponse.success({message: "Logged out successfully"}, {
       path: req.path,
       requestId: req.requestId,
       message: "Logged out successfully",
     });
 
     logger.info("User logged out", { requestId: req.requestId });
-    
+
     ApiResponse.send(res, response);
+  };
+
+  // Refresh Token:
+  refreshToken = async (req: Request, res: Response): Promise<void> => {
+    const refreshToken = req.cookies.refresh_token || req.body.refresh_token;
+    if (!refreshToken) {
+      const apiResponse = ApiResponse.badRequest(
+        "UNAUTHORIZED",
+        "Refresh Token is missing",
+      );
+      return ApiResponse.send(res, apiResponse);
+    }
+    const result = await this.authService.refreshToken(refreshToken);
+    this.setAuthCookies(res, result.session)
+    const apiResponse = ApiResponse.success(result.user);
+    ApiResponse.send(res, apiResponse);
   };
 
   //   Auth helper methods:
   private setAuthCookies(res: Response, session: any) {
     res.cookie("access_token", session.access_token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "strict",
+      ...COOKIE_CONFIG,
       maxAge: ACCESS_TOKEN_MAX_AGE,
       path: "/",
     });
 
     res.cookie("refresh_token", session.refresh_token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "strict",
+      ...COOKIE_CONFIG,
       maxAge: REFRESH_TOKEN_MAX_AGE,
       path: "/api/v1/auth/refresh",
     });

@@ -118,7 +118,8 @@ export class ApiResponse<T = any> {
 
   static send(res: any, apiResponse: ApiResponse) {
     const statusCode = ApiResponse.getStatusCode(apiResponse);
-    res.status(statusCode).json(apiResponse);
+    const meta = res.metaData ?? {}
+    res.status(statusCode).json({...apiResponse, meta});
   }
 
   private static getStatusCode(response: ApiResponse): number {
