@@ -4,6 +4,7 @@ export const metaDataApiResponse = (req: Request, res: Response, next: NextFunct
   res.metaData = {
     path: req.path,
     requestId: req.requestId, 
+    ip: req.ip,
     timestamp: new Date().toISOString()
   };
   next(); 

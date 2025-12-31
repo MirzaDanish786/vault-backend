@@ -1,4 +1,5 @@
 import { ErrorCode } from "@/types/error";
+import { MetaData } from "@/types/http";
 
 export class ApiResponse<T = any> {
   success: boolean;
@@ -32,14 +33,14 @@ export class ApiResponse<T = any> {
     };
   }
 
-  static success<T>(data: T, meta?: { path?: string; requestId?: string; method?: string; ip?: string; [key: string]: string | number | NodeJS.MemoryUsage |  undefined}) {
+  static success<T>(data: T, meta?: MetaData) {
     return new ApiResponse<T>(true, { data, meta });
   }
 
-  static created<T>(data: T, meta?: { path?: string; requestId?: string }) {
+  static created<T>(data: T, meta?: MetaData) {
     return new ApiResponse<T>(true, {
       data,
-      meta: { ...meta, status: 'created' }
+      meta: { ...meta, status: "created" },
     });
   }
 
@@ -47,7 +48,7 @@ export class ApiResponse<T = any> {
     code: ErrorCode,
     message: string,
     details?: unknown,
-    meta?: { path?: string; requestId?: string }
+    meta?: { [key: string]: string | undefined | unknown }
   ) {
     return new ApiResponse(false, {
       error: { code, message, details },
@@ -56,9 +57,9 @@ export class ApiResponse<T = any> {
   }
 
   static unauthorized(
-    code: ErrorCode = 'UNAUTHORIZED',
-    message: string = 'Authentication required',
-    meta?: { path?: string; requestId?: string }
+    code: ErrorCode = "UNAUTHORIZED",
+    message: string = "Authentication required",
+    meta?: MetaData
   ) {
     return new ApiResponse(false, {
       error: { code, message },
@@ -67,9 +68,9 @@ export class ApiResponse<T = any> {
   }
 
   static forbidden(
-    code: ErrorCode = 'FORBIDDEN',
-    message: string = 'Insufficient permissions',
-    meta?: { path?: string; requestId?: string }
+    code: ErrorCode = "FORBIDDEN",
+    message: string = "Insufficient permissions",
+    meta?: MetaData
   ) {
     return new ApiResponse(false, {
       error: { code, message },
@@ -77,13 +78,10 @@ export class ApiResponse<T = any> {
     });
   }
 
-  static notFound(
-    resource: string,
-    meta?: { path?: string; requestId?: string }
-  ) {
+  static notFound(resource: string, meta?: MetaData) {
     return new ApiResponse(false, {
       error: {
-        code: 'NOT_FOUND',
+        code: "NOT_FOUND",
         message: `${resource} not found`,
       },
       meta,
@@ -94,7 +92,7 @@ export class ApiResponse<T = any> {
     code: ErrorCode,
     message: string,
     details?: unknown,
-    meta?: { path?: string; requestId?: string }
+    meta?: MetaData
   ) {
     return new ApiResponse(false, {
       error: { code, message, details },
@@ -102,15 +100,13 @@ export class ApiResponse<T = any> {
     });
   }
 
-  static internalError(
-    error?: Error,
-    meta?: { path?: string; requestId?: string, method?: string, ip?: string }
-  ) {
+  static internalError(error?: Error, meta?: MetaData) {
     return new ApiResponse(false, {
       error: {
-        code: 'INTERNAL_SERVER_ERROR' as ErrorCode,
-        message: 'An unexpected error occurred',
-        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
+        code: "INTERNAL_SERVER_ERROR" as ErrorCode,
+        message: "An unexpected error occurred",
+        details:
+          process.env.NODE_ENV === "development" ? error?.message : undefined,
       },
       meta,
     });
@@ -118,27 +114,27 @@ export class ApiResponse<T = any> {
 
   static send(res: any, apiResponse: ApiResponse) {
     const statusCode = ApiResponse.getStatusCode(apiResponse);
-    const meta = res.metaData ?? {}
-    res.status(statusCode).json({...apiResponse, meta});
+    const meta = res.metaData ?? {};
+    res.status(statusCode).json({ ...apiResponse, meta });
   }
 
   private static getStatusCode(response: ApiResponse): number {
     if (response.success) {
-      if (response.meta?.status === 'created') return 201;
+      if (response.meta?.status === "created") return 201;
       return 200;
     }
 
     const codeMap: Record<string, number> = {
-      'VALIDATION_ERROR': 400,
-      'UNAUTHORIZED': 401,
-      'FORBIDDEN': 403,
-      'NOT_FOUND': 404,
-      'USER_ALREADY_EXISTS': 409,
-      'CONFLICT': 409,
-      'INTERNAL_SERVER_ERROR': 500,
+      VALIDATION_ERROR: 400,
+      UNAUTHORIZED: 401,
+      FORBIDDEN: 403,
+      NOT_FOUND: 404,
+      USER_ALREADY_EXISTS: 409,
+      CONFLICT: 409,
+      INTERNAL_SERVER_ERROR: 500,
     };
 
-    return codeMap[response.error?.code || ''] || 400;
+    return codeMap[response.error?.code || ""] || 400;
   }
 }
 
