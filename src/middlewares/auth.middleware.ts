@@ -1,5 +1,7 @@
+import { Permission, ROLE_PERMISSIONS, UserRole } from "@/config/constants";
 import { supabaseServer } from "@/config/supabase/server-client";
 import prisma from "@/lib/prisma/client";
+// import { UserRole } from "@/services/auth";
 import { ApiResponse } from "@/utils/api-response";
 import { logger } from "@/utils/logger";
 import { Request, Response, NextFunction } from "express";
@@ -123,7 +125,7 @@ export const authenticate = async (
 };
 
 // Role-Based Authorization Middleware
-export const requireRole = (roles: string | string[]) => {
+export const requireRole = (roles: UserRole | UserRole[]) => {
   const requiredRoles = Array.isArray(roles) ? roles : [roles];
   return (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -179,6 +181,35 @@ export const requireRole = (roles: string | string[]) => {
   };
 };
 
+// Permission-Based Middleware (for granular control)
+export const requirePermission = (permission: Permission) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return ApiResponse.send(
+        res,
+        ApiResponse.unauthorized("UNAUTHORIZED", "Authentication required")
+      );
+    }
+    const userPermissions = ROLE_PERMISSIONS[req.user.role] ?? [];
+    if (!hasPermission(userPermissions, permission)) {
+      return ApiResponse.send(
+        res,
+        ApiResponse.forbidden(
+          "INSUFFICIENT_PERMISSIONS",
+          `Missing permission: ${permission}`,
+          {
+            required: permission,
+            userPermissions,
+          }
+        )
+      );
+    }
+    logger.debug("Role check passed") 
+
+    next();
+  };
+};
+
 const extractToken = (req: Request): string | null => {
   // Token via authorization header
   const authHeader = req.headers.authorization;
@@ -205,3 +236,13 @@ const extractToken = (req: Request): string | null => {
 
   return null;
 };
+
+const hasPermission = (
+  userPermissions: readonly Permission[],
+  required: string
+): boolean =>
+  userPermissions.some(
+    (p) =>
+      p === required ||
+      (p.endsWith(".*") && required.startsWith(p.slice(0, -2)))
+  );

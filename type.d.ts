@@ -1,3 +1,4 @@
+import { UserRole } from "@/config/constants";
 import { Response } from "express";
 
 declare global {
@@ -8,7 +9,7 @@ declare global {
         id: string;
         email: string;
         name: string;
-        role: string;
+        role: UserRole;
         profile: any;
         authMetadata?: {
           emailVerified: boolean;
