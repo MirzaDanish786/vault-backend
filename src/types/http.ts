@@ -9,3 +9,5 @@ export type StatusCode =
   | 500;
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+export type MetaData = { [key: string]: string | number | unknown | undefined };

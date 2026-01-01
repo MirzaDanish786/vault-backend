@@ -1,7 +1,6 @@
-import { USER_ROLES } from "@/config/constants";
-import { ApiError } from "@/utils/error";
+import { UserRole } from "@/config/constants";
 
-export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+// export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
 export interface SupabaseAuthUser {
   id: string;
