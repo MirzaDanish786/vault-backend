@@ -55,6 +55,17 @@ export class ApiResponse<T = any> {
       meta,
     });
   }
+  static toManyRequests(
+    code: ErrorCode,
+    message: string,
+    details?: unknown,
+    meta?: { [key: string]: string | undefined | unknown }
+  ) {
+    return new ApiResponse(false, {
+      error: { code, message, details },
+      meta,
+    });
+  }
 
   static unauthorized(
     code: ErrorCode = "UNAUTHORIZED",
@@ -131,6 +142,7 @@ export class ApiResponse<T = any> {
       NOT_FOUND: 404,
       USER_ALREADY_EXISTS: 409,
       CONFLICT: 409,
+      RATE_LIMIT_EXCEEDED: 429,
       INTERNAL_SERVER_ERROR: 500,
     };
 

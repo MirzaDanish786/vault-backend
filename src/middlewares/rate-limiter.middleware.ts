@@ -61,7 +61,7 @@ export const rateLimiter = (options?: {
         resetTime,
       });
 
-      const response = ApiResponse.badRequest(
+      const response = ApiResponse.toManyRequests(
         "RATE_LIMIT_EXCEEDED",
         options?.message || "Too many requests, please try again later.",
         {
