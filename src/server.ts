@@ -1,9 +1,9 @@
 import 'dotenv/config'; 
 
-import app from './app';
-import prisma from './lib/prisma/client';
-import { env } from './config/env';
-import { logger } from './utils/logger';
+import app from './app.js';
+import { env } from '@/config/env';
+import prisma from '@/lib/prisma/client';
+import { logger } from '@/utils/logger';
 
 const PORT = env.PORT; 
 
