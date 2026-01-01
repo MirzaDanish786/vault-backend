@@ -3,6 +3,7 @@ import { requestIdMiddleware } from "@/middlewares/request-id.middleware";
 import { authController } from "@/controllers/auth.controller";
 import { metaDataApiResponse } from "@/middlewares/meta-data.middleware";
 import { authRateLimiter } from "@/middlewares/rate-limiter.middleware";
+import { authenticate } from "@/middlewares/auth.middleware";
 
 const router = Router();
 
@@ -13,6 +14,8 @@ router.use(authRateLimiter)
 router.post("/signup", authController.signUp);
 router.post("/signin", authController.signIn);
 router.post("/signout", authController.signOut);
+router.get("/me", authenticate, authController.getUserDetails)
+
 router.post("/refresh", authController.refreshToken)
 
 export default router;

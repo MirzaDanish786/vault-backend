@@ -77,6 +77,19 @@ export class AuthController {
     ApiResponse.send(res, response);
   };
 
+  // Me ednpoint:
+  getUserDetails= async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user?.id;
+    if(!userId){
+      const response = ApiResponse.unauthorized("UNAUTHORIZED", "User id is missing");
+      return ApiResponse.send(res, response)
+    }
+    const user = await this.authService.getUser(userId!);
+    const response = ApiResponse.success(user)
+    ApiResponse.send(res, response)
+
+  }
+
   // Refresh Token:
   refreshToken = async (req: Request, res: Response): Promise<void> => {
     const refreshToken = req.cookies.refresh_token || req.body.refresh_token;

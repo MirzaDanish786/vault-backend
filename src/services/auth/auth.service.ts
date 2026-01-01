@@ -264,6 +264,19 @@ export class AuthService {
     };
   }
 
+  async getUser(userId: string) {
+    if (!userId) {
+      throw new ApiError(400, "USER_ID_MISSING", "User id is missing");
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true, addresses: true },
+    });
+    if (!user) {
+      throw new ApiError(404, "USER_NOT_FOUND", "User not found");
+    }
+    return {user}
+  }
   private createTempSupabaseClient(): SupabaseClient {
     return createClient(
       process.env.SUPABASE_URL!,
