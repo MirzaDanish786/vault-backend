@@ -17,15 +17,19 @@ declare global {
           createdAt?: string;
         };
       };
-
+      rateLimit?: {
+        limit: number;
+        remaining: number;
+        resetTime: number;
+      };
     }
 
     interface Response {
       metaData?: {
         path: string;
         requestId?: string;
-        ip?: string,
-        timestamp?: string
+        ip?: string;
+        timestamp?: string;
       };
     }
   }
