@@ -7,26 +7,29 @@ datasource db {
   provider = "postgresql"
 }
 model User {
-  id        String    @id @map("id") @db.Uuid
-  name      String    @map("name")
-  email     String    @unique @map("email")
-  profile   Profile?
-  addresses Address[] // 1:N relation for multiple addresses
-  role      Role      @default(USER) @map("role")
-  // isActive  Boolean   @default(true) @map("is_active")
+  id        String    @id @db.Uuid
+  name      String
+  email     String    @unique
+  role      Role      @default(USER)
+  isActive  Boolean   @default(true) @map("is_active")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
+  
+  profile   Profile?
+  addresses Address[]
+  products  Product[]
+  carts     Cart[]
+  reviews   Review[]
 
   @@index([email])
   @@index([role])
-
   @@map("users")
 }
 
 model Profile {
-  id        String    @id @default(uuid()) @map("id") @db.Uuid
-  avatar    String?   @map("avatar")
-  userId    String    @unique @map("user_id") @db.Uuid
+  id        String    @id @default(uuid()) @db.Uuid
+  avatar    String?
+  userId    String    @unique @db.Uuid @map("user_id")
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
@@ -36,14 +39,14 @@ model Profile {
 
 model Address {
   id         String   @id @default(uuid()) @db.Uuid
-  userId     String   @map("user_id") @db.Uuid
+  userId     String   @db.Uuid @map("user_id")
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   label      Label    @default(HOME)
-  street     String?   @map("street")
-  city       String?   @map("city")
-  state      String?   @map("state")
-  postalCode String?   @map("postal_code")
-  country    String?   @map("country")
+  street     String?
+  city       String?
+  state      String?
+  postalCode String?  @map("postal_code")
+  country    String?
   isDefault  Boolean  @default(false) @map("is_default")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -64,4 +67,310 @@ enum Role {
   ADMIN
   USER
   SELLER
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @db.VarChar(255)
+  slug        String    @unique @db.VarChar(255)
+  description String?   @db.Text
+  metaTitle   String?   @db.VarChar(255) @map("meta_title")
+  metaDescription String? @db.Text @map("meta_description")
+  imageUrl    String?   @map("image_url")
+  
+  parentId   String?   @map("parent_id") // category may has a parent and many children recursively
+  parent     Category? @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children   Category[] @relation("CategoryToCategory")
+  
+  isActive   Boolean   @default(true) @map("is_active")
+  sortOrder  Int       @default(0) @map("sort_order")
+  
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  
+  products   Product[]
+  
+  @@index([parentId])
+  @@index([slug])
+  @@index([isActive])
+  @@index([sortOrder])
+  @@map("categories")
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  sku         String    @unique @db.VarChar(100)
+  name        String    @db.VarChar(255)
+  slug        String    @unique @db.VarChar(255)
+  description String    @db.Text
+  shortDescription String? @db.VarChar(500) @map("short_description")
+  
+  basePrice   Decimal   @db.Decimal(10, 2) @map("base_price")
+  salePrice   Decimal?  @db.Decimal(10, 2) @map("sale_price")
+  costPrice   Decimal   @db.Decimal(10, 2) @map("cost_price")
+  
+  totalStock  Int       @default(0) @map("total_stock")
+  lowStockThreshold Int @default(5) @map("low_stock_threshold")
+  
+  productType ProductType @default(PHYSICAL) @map("product_type")
+  weight      Decimal?  @db.Decimal(8, 3)
+  dimensions  Json?
+  
+  downloadUrl String?   @map("download_url")
+  fileSize    BigInt?   @map("file_size")
+  
+  isActive    Boolean   @default(true) @map("is_active")
+  isFeatured  Boolean   @default(false) @map("is_featured")
+  isDigital   Boolean   @default(false) @map("is_digital")
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  publishedAt DateTime? @map("published_at")
+  
+  categoryId  String    @map("category_id")
+  category    Category  @relation(fields: [categoryId], references: [id])
+  
+  sellerId    String     @db.Uuid() @map("seller_id") 
+  seller      User      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  variations  ProductVariation[]
+  images      ProductImage[]
+  attributes  ProductAttributeValue[]
+  reviews     Review[]
+  cartItems   CartItem[]
+  
+  @@index([categoryId])
+  @@index([sellerId])
+  @@index([sku])
+  @@index([slug])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([publishedAt])
+  @@index([createdAt])
+  @@map("products")
+}
+
+enum ProductType {
+  PHYSICAL
+  DIGITAL
+  SERVICE
+}
+
+model ProductVariation {
+  id          String    @id @default(cuid())
+  sku         String    @unique @db.VarChar(100)
+  name        String    @db.VarChar(255)
+  priceOffset Decimal?  @db.Decimal(10, 2) @map("price_offset")
+  salePrice   Decimal?  @db.Decimal(10, 2) @map("sale_price")
+  stock       Int       @default(0)
+  isActive    Boolean   @default(true) @map("is_active")
+  imageUrl    String?   @map("image_url")
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  attributeValues ProductAttributeValue[]
+  cartItems       CartItem[]
+  images          ProductImage[]
+  
+  @@index([productId])
+  @@index([sku])
+  @@index([isActive])
+  @@map("product_variations")
+}
+
+model ProductAttribute {
+  id          String    @id @default(cuid())
+  name        String    @unique @db.VarChar(100)
+  displayName String    @db.VarChar(100) @map("display_name")
+  description String?   @db.Text
+  isRequired  Boolean   @default(false) @map("is_required")
+  sortOrder   Int       @default(0) @map("sort_order")
+  type        AttributeType @default(TEXT)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  values      ProductAttributeOption[]
+  attributeValues ProductAttributeValue[]  
+  
+  @@map("product_attributes")
+}
+
+model ProductAttributeOption {
+  id          String    @id @default(cuid())
+  value       String    @db.VarChar(100)
+  displayValue String   @db.VarChar(100) @map("display_value")
+  hexColor    String?   @db.VarChar(7) @map("hex_color")
+  imageUrl    String?   @map("image_url")
+  sortOrder   Int       @default(0) @map("sort_order")
+  
+  attributeId String    @map("attribute_id")
+  attribute   ProductAttribute @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  
+  attributeValues ProductAttributeValue[]  
+  
+  @@unique([attributeId, value])
+  @@map("product_attribute_options")
+}
+
+model ProductAttributeValue {
+  id          String    @id @default(cuid())
+  
+  productId   String?   @map("product_id")
+  product     Product?  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  variationId String?   @map("variation_id")
+  variation   ProductVariation? @relation(fields: [variationId], references: [id], onDelete: Cascade)
+  
+  optionId    String    @map("option_id")
+  option      ProductAttributeOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  
+  attributeId String    @map("attribute_id")
+  attribute   ProductAttribute @relation(fields: [attributeId], references: [id])
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  
+  @@index([productId])
+  @@index([variationId])
+  @@index([attributeId])
+  @@unique([productId, variationId, optionId])
+  @@map("product_attribute_values")
+}
+
+enum AttributeType {
+  TEXT
+  COLOR
+  IMAGE
+  NUMBER
+}
+
+model ProductImage {
+  id           String    @id @default(cuid())
+  url          String    @db.Text
+  thumbnailUrl String?   @map("thumbnail_url")
+  mediumUrl    String?   @map("medium_url")
+  largeUrl     String?   @map("large_url")
+  altText      String?   @db.VarChar(255) @map("alt_text")
+  isPrimary    Boolean   @default(false) @map("is_primary")
+  sortOrder    Int       @default(0) @map("sort_order")
+  
+  productId    String    @map("product_id")
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  variationId  String?   @map("variation_id")
+  variation    ProductVariation? @relation(fields: [variationId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  
+  @@index([productId])
+  @@index([isPrimary])
+  @@index([sortOrder])
+  @@index([variationId])
+  @@map("product_images")
+}
+
+model Review {
+  id          String    @id @default(cuid())
+  
+  // Rating (1-5)
+  rating      Int       @default(5)   @map("rating")
+  title       String?   @db.VarChar(200)
+  comment     String?   @db.Text
+  isVerifiedPurchase Boolean @default(false) @map("is_verified_purchase")
+  
+  // Helpfulness tracking like and dislike
+  helpfulCount Int      @default(0) @map("helpful_count")
+  notHelpfulCount Int   @default(0) @map("not_helpful_count")
+  
+  isApproved  Boolean   @default(true) @map("is_approved")  // Admin approval
+  isFeatured  Boolean   @default(false) @map("is_featured") // Featured review
+  
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  userId      String    @db.Uuid() @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Replies for seller responses
+  parentReviewId String? @map("parent_review_id")
+  parentReview   Review? @relation("ReviewReplies", fields: [parentReviewId], references: [id])
+  replies        Review[] @relation("ReviewReplies")
+  
+  images      ReviewImage[]
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
+  @@index([isApproved])
+  @@index([createdAt])
+  @@unique([userId, productId])  
+  
+  @@map("reviews")
+}
+
+model ReviewImage {
+  id          String    @id @default(cuid())
+  url         String    @db.Text
+  thumbnailUrl String?  @map("thumbnail_url")
+  altText     String?   @db.VarChar(255) @map("alt_text")
+  sortOrder   Int       @default(0) @map("sort_order")
+  
+  reviewId    String    @map("review_id")
+  review      Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  
+  @@index([reviewId])
+  @@map("review_images")
+}
+
+model Cart {
+  id          String    @id @default(cuid())
+  userId      String?   @db.Uuid() @map("user_id")
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId   String?   @unique @map("session_id")
+  totalItems  Int       @default(0) @map("total_items")
+  totalPrice  Decimal   @default(0) @db.Decimal(10, 2) @map("total_price")
+  isActive    Boolean   @default(true) @map("is_active")
+  expiresAt   DateTime  @map("expires_at") 
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  items       CartItem[]
+  
+  @@index([userId])
+  @@index([sessionId])
+  @@index([isActive])
+  @@index([expiresAt])
+  @@map("carts")
+}
+
+model CartItem {
+  id          String    @id @default(cuid())
+  quantity    Int       @default(1)
+  unitPrice   Decimal   @db.Decimal(10, 2) @map("unit_price")
+  
+  cartId      String    @map("cart_id")
+  cart        Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id])
+  
+  variationId String?   @map("variation_id")
+  variation   ProductVariation? @relation(fields: [variationId], references: [id])
+  
+  addedAt     DateTime  @default(now()) @map("added_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  @@unique([cartId, productId, variationId])
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
 }
