@@ -1,5 +1,6 @@
 import  {z, ZodError } from "zod";
 import { USER_ROLES } from "@/config/constants";
+import { IValidateReturn } from "@/types/validation";
 
 // Signup schema
 export const signUpSchema = z.object({
@@ -43,11 +44,11 @@ export type SignInInput = z.infer<typeof signInSchema>;
 
 
 // Validators Fucnctions:
-interface IValidateReturn<T>{
-    success: boolean;
-    data?: T;
-    errors?: z.ZodError
-}
+// interface IValidateReturn<T>{
+//     success: boolean;
+//     data?: T;
+//     errors?: z.ZodError
+// }
 export const validateSignUpInput = (input:SignUpInput):IValidateReturn<SignUpInput>=>{
     const result = signUpSchema.safeParse(input);
     return {
