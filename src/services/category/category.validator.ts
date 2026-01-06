@@ -32,9 +32,8 @@ export const updateCategorySchema = createCategorySchema.partial().extend({
   id: z.string().cuid("Invalid category ID"),
 });
 
-export const categoryIdSchema = z.object({
-  id: z.string().cuid("Invalid category ID"),
-});
+export const categoryIdSchema = z.string().cuid("Invalid category ID");
+
 
 export const categoryFiltersSchema = z.object({
   isActive: z
@@ -61,7 +60,7 @@ export const categoryFiltersSchema = z.object({
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
-export type CateogryIdInput = z.infer<typeof categoryIdSchema>;
+export type CateogoryIdInput = z.infer<typeof categoryIdSchema>;
 export type CategoryFilters = z.infer<typeof categoryFiltersSchema>;
 
 export class CategoryValidator {
@@ -95,9 +94,9 @@ export class CategoryValidator {
     }
   }
 
-  static validateId(id: CateogryIdInput): CateogryIdInput {
+  static validateId(id: CateogoryIdInput): CateogoryIdInput {
     try {
-      return categoryIdSchema.parse({ id });
+      return categoryIdSchema.parse( id );
     } catch (error) {
       throw new CategoryError(
         CATEGORY_ERROR_CODE.CATEGORY_NOT_FOUND,

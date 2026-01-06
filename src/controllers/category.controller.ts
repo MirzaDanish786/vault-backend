@@ -1,4 +1,5 @@
 import {
+  categoryIdSchema,
   CategoryService,
   createCategorySchema,
   ICreateCategoryInput,
@@ -27,6 +28,21 @@ export class CategoryController {
       result,
     });
     ApiResponse.send(res, resposne);
+  };
+
+  findCategoryById = async (req: Request, res: Response) => {
+    const validation = categoryIdSchema.safeParse(req.params.id);
+    if (!validation.success) {
+      const firstError = validation.error.issues[0].message || "Invalid";
+      const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
+      logger.error("Validation error", { error: firstError });
+      return ApiResponse.send(res, response);
+    }
+    const isProductsInclude = req.query.includeProducts === "true"
+    const validateId = validation.data;
+    const result = await this.categoryService.findById(validateId, isProductsInclude);
+    const apiResponse = ApiResponse.success(result);
+    ApiResponse.send(res, apiResponse)
   };
 }
 export const categoryController = new CategoryController();

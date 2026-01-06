@@ -14,5 +14,10 @@ router.post(
   requirePermission(PERMISSIONS.CATEGORY_WRITE),
   categoryController.createCategory
 );
+router.get(
+  "/:id",
+//   requirePermission(PERMISSIONS.CATEGORY_READ),
+  categoryController.findCategoryById
+);
 
 export default router;

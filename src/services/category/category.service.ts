@@ -4,7 +4,7 @@ import {
   ICategory,
   ICreateCategoryInput,
 } from "./category.types";
-import { CategoryValidator } from "./category.validator";
+import { CategoryValidator, CateogoryIdInput } from "./category.validator";
 import slugify from "slugify";
 import { logger } from "@/utils/logger";
 
@@ -122,10 +122,50 @@ export class CategoryService {
         parentId: validatedData.parentId,
         imageUrl: validatedData.imageUrl,
         isActive: validatedData.isActive,
-        sortOrder
+        sortOrder,
       },
     });
-    logger.info("Category Service layer created the category successfully", { category });
+    logger.info("Category Service layer created the category successfully", {
+      category,
+    });
     return category;
+  };
+
+  findById = async (
+    id: CateogoryIdInput,
+    includeProducts: boolean = false
+  ): Promise<ICategory | null> => {
+    const validatedId = CategoryValidator.validateId(id);
+
+    const category = await prisma.category.findUnique({
+      where: { id: validatedId },
+      include: includeProducts
+        ? {
+            products: {
+              where: { isActive: true },
+              take: 10,
+              orderBy: { createdAt: "desc" },
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                basePrice: true,
+                images: {
+                  where: { isPrimary: true },
+                  take: 1,
+                },
+              },
+            },
+          }
+        : undefined,
+    });
+
+    if(!category){
+        throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found!")
+    }
+    logger.info("Category Service layer fetched the category successfully", {
+      category,
+    });
+    return category
   };
 }
