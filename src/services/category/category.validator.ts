@@ -10,19 +10,19 @@ export const createCategorySchema = z.object({
     .max(255, "Name cannot exceed 255 characters")
     .trim(),
 
-  slug: z
-    .string()
-    .min(2, "Slug must be at least 2 characters")
-    .max(255, "Slug cannot exceed 255 characters")
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase with hyphens")
-    .trim(),
+  // slug: z
+  //   .string()
+  //   .min(2, "Slug must be at least 2 characters")
+  //   .max(255, "Slug cannot exceed 255 characters")
+  //   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase with hyphens")
+  //   .trim(),
 
-  description: z.string().max(2000).optional().nullable(),
-  metaTitle: z.string().max(255).optional().nullable(),
-  metaDescription: z.string().max(500).optional().nullable(),
-  imageUrl: z.string().url("Invalid image URL").optional().nullable(),
+  description: z.string().max(2000).optional(),
+  metaTitle: z.string().max(255).optional(),
+  metaDescription: z.string().max(500).optional(),
+  imageUrl: z.string().url("Invalid image URL").optional(),
 
-  parentId: z.string().cuid("Invalid parent category ID").optional().nullable(),
+  parentId: z.string().cuid("Invalid parent category ID").optional(),
 
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().min(0).max(999).default(0),

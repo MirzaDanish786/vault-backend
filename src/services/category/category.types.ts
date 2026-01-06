@@ -17,7 +17,7 @@ export interface ICategory {
 }
 export interface ICreateCategoryInput {
   name: string;
-  slug: string;
+  // slug: string;
   description?: string;
   metaTitle?: string;
   metaDescription?: string;
