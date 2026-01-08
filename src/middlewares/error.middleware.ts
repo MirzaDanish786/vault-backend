@@ -29,6 +29,7 @@ export function errorHandler(
         method: req.method,
         ip: req.ip
       },
+      statusCode: err.statusCode
     });
 
     logger.error("API error occurred", {

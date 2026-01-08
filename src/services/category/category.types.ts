@@ -74,6 +74,7 @@ export const CATEGORY_ERROR_CODE ={
   INVALID_PARENT: "INVALID_PARENT",
   SELF_REFERENCE: "SELF_REFERENCE",
   CIRCULAR_REFERENCE: "CIRCULAR_REFERENCE",
+  INVALID_SLUG: "INVALID_SLUG"
 } as const;
 
 export type CategoryErrorCode = (typeof CATEGORY_ERROR_CODE)[keyof typeof CATEGORY_ERROR_CODE];
@@ -81,8 +82,8 @@ export class CategoryError extends ApiError {
   constructor(
     code: CategoryErrorCode,
     message: string,
+    statusCode:StatusCode = 400,
     details?: unknown,
-    statusCode = 400 as StatusCode 
   ) {
     super(statusCode, code, message, details);
     this.name = "CategoryError";

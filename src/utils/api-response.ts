@@ -4,6 +4,7 @@ import { MetaData } from "@/types/http";
 export class ApiResponse<T = any> {
   success: boolean;
   data?: T;
+  statusCode?: number;
   error?: {
     code: ErrorCode;
     message: string;
@@ -22,11 +23,13 @@ export class ApiResponse<T = any> {
       data?: T;
       error?: { code: ErrorCode; message: string; details?: unknown };
       meta?: { path?: string; requestId?: string; [key: string]: unknown };
+      statusCode?:number;
     }
   ) {
     this.success = success;
     this.data = options?.data;
     this.error = options?.error;
+    this.statusCode = options?.statusCode;
     this.meta = {
       timestamp: new Date().toISOString(),
       ...options?.meta,
@@ -123,13 +126,16 @@ export class ApiResponse<T = any> {
     });
   }
 
-  static send(res: any, apiResponse: ApiResponse) {
-    const statusCode = ApiResponse.getStatusCode(apiResponse);
+  static send(res: any, apiResponse: ApiResponse, forceStatusCode?: number) {
+    const statusCode = forceStatusCode || apiResponse.statusCode || ApiResponse.getStatusCode(apiResponse);
     const meta = res.metaData ?? {};
     res.status(statusCode).json({ ...apiResponse, meta });
   }
 
   private static getStatusCode(response: ApiResponse): number {
+    if(response.statusCode){
+      return response.statusCode;
+    }
     if (response.success) {
       if (response.meta?.status === "created") return 201;
       return 200;

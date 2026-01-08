@@ -102,7 +102,7 @@ export class CategoryService {
       });
 
       if (!isParentExist) {
-        throw new CategoryError("INVALID_PARENT", "Parent category not found");
+        throw new CategoryError("INVALID_PARENT", "Parent category not found", 404);
       }
 
       const allCategories = await this.getAllCategoriesForValidation();
@@ -160,12 +160,45 @@ export class CategoryService {
         : undefined,
     });
 
-    if(!category){
-        throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found!")
+    if (!category) {
+      throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found!", 404);
     }
     logger.info("Category Service layer fetched the category successfully", {
       category,
     });
-    return category
+    return category;
+  };
+
+  findBySlug = async (slug: string): Promise<ICategory> => {
+    const validatedSlug = CategoryValidator.validateSlug(slug);
+    const category = await prisma.category.findUnique({
+      where: { slug: validatedSlug },
+      include: {
+        products: {
+          where: {
+            isActive: true,
+          },
+          take: 10,
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+        children: {
+          where: {
+            isActive: true,
+          },
+          orderBy: {
+            sortOrder: "asc",
+          },
+        },
+      },
+    });
+    if (!category) {
+      throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found!", 404);
+    }
+    logger.info("Category Service layer fetched the category successfully", {
+      category,
+    });
+    return category;
   };
 }

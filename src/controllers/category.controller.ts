@@ -1,6 +1,7 @@
 import {
   categoryIdSchema,
   CategoryService,
+  categorySlugSchema,
   createCategorySchema,
   ICreateCategoryInput,
 } from "@/services/category";
@@ -44,5 +45,19 @@ export class CategoryController {
     const apiResponse = ApiResponse.success(result);
     ApiResponse.send(res, apiResponse)
   };
+
+  findCategoryBySlug = async(req:Request, res:Response) =>{
+    const validation = categorySlugSchema.safeParse(req.params.slug)
+    if (!validation.success) {
+      const firstError = validation.error.issues[0].message || "Invalid";
+      const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
+      logger.error("Validation error", { error: firstError });
+      return ApiResponse.send(res, response);
+    }
+    const slug = validation.data;
+    const result = await this.categoryService.findBySlug(slug)
+    const apiResponse = ApiResponse.success(result)
+    ApiResponse.send(res, apiResponse)
+  }
 }
 export const categoryController = new CategoryController();
