@@ -29,6 +29,7 @@ const envSchema = z.object({
   ENABLE_RATE_LIMITING: z.string()
     .default('true')                     
     .transform((val) => val === 'true'),  
+  API_URL: z.string().url().min(1, 'API URL is required'),
 });
 
 export const env = envSchema.parse(process.env);

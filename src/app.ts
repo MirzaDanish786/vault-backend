@@ -9,6 +9,8 @@ import { supabaseServer } from "./config/supabase/server-client";
 import { errorHandler } from "./middlewares/error.middleware";
 import { ApiError } from "./utils/error";
 import router from "./routes";
+import { swaggerDocs } from './docs';
+
 
 dotenv.config();
 
@@ -39,6 +41,10 @@ app.get("/", (req: Request, res: Response) => {
     },
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
 });
 
 // API Routes
