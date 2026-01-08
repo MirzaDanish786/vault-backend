@@ -14,6 +14,9 @@ export interface ICategory {
   sortOrder: number;
   createdAt: Date;
   updatedAt: Date;
+  children?: ICategory[];
+  productCount?: number;
+  [key: string]: unknown;
 }
 export interface ICreateCategoryInput {
   name: string;
@@ -66,7 +69,7 @@ export interface IPaginatedCategories {
   };
 }
 
-export const CATEGORY_ERROR_CODE ={
+export const CATEGORY_ERROR_CODE = {
   CATEGORY_NOT_FOUND: "CATEGORY_NOT_FOUND",
   CATEGORY_HAS_PRODUCTS: "CATEGORY_HAS_PRODUCTS",
   CATEGORY_HAS_CHILDREN: "CATEGORY_HAS_CHILDREN",
@@ -74,19 +77,19 @@ export const CATEGORY_ERROR_CODE ={
   INVALID_PARENT: "INVALID_PARENT",
   SELF_REFERENCE: "SELF_REFERENCE",
   CIRCULAR_REFERENCE: "CIRCULAR_REFERENCE",
-  INVALID_SLUG: "INVALID_SLUG"
+  INVALID_SLUG: "INVALID_SLUG",
 } as const;
 
-export type CategoryErrorCode = (typeof CATEGORY_ERROR_CODE)[keyof typeof CATEGORY_ERROR_CODE];
+export type CategoryErrorCode =
+  (typeof CATEGORY_ERROR_CODE)[keyof typeof CATEGORY_ERROR_CODE];
 export class CategoryError extends ApiError {
   constructor(
     code: CategoryErrorCode,
     message: string,
-    statusCode:StatusCode = 400,
-    details?: unknown,
+    statusCode: StatusCode = 400,
+    details?: unknown
   ) {
     super(statusCode, code, message, details);
     this.name = "CategoryError";
   }
 }
-

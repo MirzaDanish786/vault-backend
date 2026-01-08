@@ -2,11 +2,18 @@ import prisma from "@/lib/prisma/client";
 import {
   CategoryError,
   ICategory,
+  ICategoryTree,
   ICreateCategoryInput,
+  IPaginatedCategories,
 } from "./category.types";
-import { CategoryValidator, CateogoryIdInput } from "./category.validator";
+import {
+  CategoryFilters,
+  CategoryValidator,
+  CateogoryIdInput,
+} from "./category.validator";
 import slugify from "slugify";
 import { logger } from "@/utils/logger";
+import { Prisma } from "@/generated/prisma/client";
 
 export class CategoryService {
   // ===Utils Methods====
@@ -28,6 +35,7 @@ export class CategoryService {
       }
       const currentCategory = allCategories.find((c) => c.id === currentId);
       if (!currentCategory) break;
+      visited.add(currentId);  
       currentId = currentCategory.parentId;
     }
   };
@@ -57,6 +65,7 @@ export class CategoryService {
       }
       const currentCategory = allCategories.find((c) => c.id === currentId);
       if (!currentCategory) break;
+      visited.add(currentId);  
       currentId = currentCategory.parentId;
     }
   };
@@ -102,7 +111,11 @@ export class CategoryService {
       });
 
       if (!isParentExist) {
-        throw new CategoryError("INVALID_PARENT", "Parent category not found", 404);
+        throw new CategoryError(
+          "INVALID_PARENT",
+          "Parent category not found",
+          404
+        );
       }
 
       const allCategories = await this.getAllCategoriesForValidation();
@@ -200,5 +213,117 @@ export class CategoryService {
       category,
     });
     return category;
+  };
+
+  //
+  findAll = async (filters: CategoryFilters): Promise<IPaginatedCategories> => {
+    const validateFilters = CategoryValidator.validateFilters(filters);
+    const {
+      page,
+      limit,
+      search,
+      parentId,
+      isActive,
+      treeFormat,
+      includeChildren,
+      includeProducts,
+    } = validateFilters;
+
+    const skip = (page - 1) * limit;
+    const where: Prisma.CategoryWhereInput = {};
+    if (isActive !== undefined) {
+      where.isActive = isActive;
+    }
+    if (parentId !== undefined) {
+      where.parentId = parentId;
+    }
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+        { slug: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    const [categories, total] = await Promise.all([
+      prisma.category.findMany({
+        where,
+        take: limit,
+        skip,
+        orderBy: [
+          {
+            sortOrder: "asc",
+          },
+          {
+            name: "asc",
+          },
+        ],
+        include: includeProducts
+          ? {
+              _count: {
+                select: {
+                  products: true,
+                },
+              },
+            }
+          : undefined,
+      }),
+      prisma.category.count({
+        where,
+      }),
+    ]);
+
+    let finalCategories:ICategory[] = categories as ICategory[];
+    if (includeChildren) {
+      const categoriesId = categories.map((cat) => cat.id);
+
+      const childrens = await prisma.category.findMany({
+        where: {
+          parentId: {
+            in: categoriesId,
+          },
+        },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      });
+
+      type CategoryWithChildren = Prisma.CategoryGetPayload<{}> & {
+        children: Prisma.CategoryGetPayload<{}>[]
+      }
+      const categoryMap = new Map<string, CategoryWithChildren>(
+        categories.map((c) => [c.id, { ...c, children: [] }])
+      );
+      childrens.forEach(child =>{
+        const parent = categoryMap.get(child.parentId!)
+        if(parent){
+          parent.children.push(child)
+        }
+      })
+      finalCategories = Array.from(categoryMap.values())
+    }
+    if(treeFormat){
+      const buildTree = (nodes: ICategory[], parentId: string | null = null):ICategory[]=>{
+        return nodes.filter(node => node.parentId === parentId).map((node)=>({
+          ...node,
+          children: buildTree(nodes, node.id)
+        }))
+      }
+      finalCategories = buildTree(finalCategories);
+    }
+
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPreviousPage = page > 1;
+
+    return {
+      data: finalCategories,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage,
+        hasPreviousPage,
+      },
+    };
   };
 }
