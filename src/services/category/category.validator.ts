@@ -46,26 +46,14 @@ export const categorySlugSchema = z
 export const categoryIdSchema = z.string().cuid("Invalid category ID");
 
 export const categoryFiltersSchema = z.object({
-  isActive: z
-    .enum(["true", "false"])
-    .transform((val) => val === "true")
-    .optional(),
-  parentId: z.string().cuid("Invalid parent ID").optional().nullable(),
-  search: z.string().min(1).optional(),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  includeProducts: z
-    .enum(["true", "false"])
-    .transform((val) => val === "true")
-    .optional(),
-  includeChildren: z
-    .enum(["true", "false"])
-    .transform((val) => val === "true")
-    .optional(),
-  treeFormat: z
-    .enum(["true", "false"])
-    .transform((val) => val === "true")
-    .optional(),
+  limit: z.coerce.number().int().positive().max(100).default(20),
+  search: z.string().optional(),
+  parentId: z.string().optional().nullable(),
+  isActive: z.coerce.boolean().optional(),
+  treeFormat: z.coerce.boolean().default(false),
+  includeChildren: z.coerce.boolean().default(false),
+  includeProducts: z.coerce.boolean().default(false),
 });
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

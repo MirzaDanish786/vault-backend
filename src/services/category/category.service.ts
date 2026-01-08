@@ -228,7 +228,7 @@ export class CategoryService {
       includeChildren,
       includeProducts,
     } = validateFilters;
-
+    console.log(validateFilters)
     const skip = (page - 1) * limit;
     const where: Prisma.CategoryWhereInput = {};
     if (isActive !== undefined) {
@@ -308,6 +308,7 @@ export class CategoryService {
         }))
       }
       finalCategories = buildTree(finalCategories);
+      console.log(finalCategories)
     }
 
     const totalPages = Math.ceil(total / limit);

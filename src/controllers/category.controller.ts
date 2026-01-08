@@ -1,4 +1,5 @@
 import {
+  categoryFiltersSchema,
   categoryIdSchema,
   CategoryService,
   categorySlugSchema,
@@ -39,15 +40,18 @@ export class CategoryController {
       logger.error("Validation error", { error: firstError });
       return ApiResponse.send(res, response);
     }
-    const isProductsInclude = req.query.includeProducts === "true"
+    const isProductsInclude = req.query.includeProducts === "true";
     const validateId = validation.data;
-    const result = await this.categoryService.findById(validateId, isProductsInclude);
+    const result = await this.categoryService.findById(
+      validateId,
+      isProductsInclude
+    );
     const apiResponse = ApiResponse.success(result);
-    ApiResponse.send(res, apiResponse)
+    ApiResponse.send(res, apiResponse);
   };
 
-  findCategoryBySlug = async(req:Request, res:Response) =>{
-    const validation = categorySlugSchema.safeParse(req.params.slug)
+  findCategoryBySlug = async (req: Request, res: Response) => {
+    const validation = categorySlugSchema.safeParse(req.params.slug);
     if (!validation.success) {
       const firstError = validation.error.issues[0].message || "Invalid";
       const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
@@ -55,9 +59,24 @@ export class CategoryController {
       return ApiResponse.send(res, response);
     }
     const slug = validation.data;
-    const result = await this.categoryService.findBySlug(slug)
-    const apiResponse = ApiResponse.success(result)
-    ApiResponse.send(res, apiResponse)
-  }
+    const result = await this.categoryService.findBySlug(slug);
+    const apiResponse = ApiResponse.success(result);
+    ApiResponse.send(res, apiResponse);
+  };
+
+  findAllCategoriesByFilters = async (req: Request, res: Response) => {
+    const validationFilters = categoryFiltersSchema.safeParse(req.query);
+    logger.debug("query...",req.query)
+    if (!validationFilters.success) {
+      const firstError = validationFilters.error.issues[0].message || "Invalid";
+      const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
+      logger.error("Validation error", { error: firstError });
+      return ApiResponse.send(res, response);
+    }
+    const validateFilters = validationFilters.data;
+    const result = await this.categoryService.findAll(validateFilters);
+    const apiResponse = ApiResponse.success(result);
+    ApiResponse.send(res, apiResponse);
+  };
 }
 export const categoryController = new CategoryController();

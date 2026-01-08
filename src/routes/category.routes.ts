@@ -20,6 +20,9 @@ router.get(
   categoryController.findCategoryById
 );
 
+// Find categories by filters and searching API route:
+router.get("/", categoryController.findAllCategoriesByFilters)
+
 router.get("/slug/:slug", categoryController.findCategoryBySlug);
 
 export default router;
