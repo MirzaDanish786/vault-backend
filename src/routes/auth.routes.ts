@@ -11,11 +11,11 @@ router.use(requestIdMiddleware)
 router.use(metaDataApiResponse)
 router.use(authRateLimiter)
 
+
 router.post("/signup", authController.signUp);
 router.post("/signin", authController.signIn);
 router.post("/signout", authController.signOut);
 router.get("/me", authenticate, authController.getUserDetails)
-
 router.post("/refresh", authController.refreshToken)
 
 export default router;

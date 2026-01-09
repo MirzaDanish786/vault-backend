@@ -8,12 +8,14 @@ import { Router } from "express";
 const router = Router();
 router.use(requestIdMiddleware);
 router.use(metaDataApiResponse);
+
 router.post(
   "/",
   authenticate,
   requirePermission(PERMISSIONS.CATEGORY_WRITE),
   categoryController.createCategory
 );
+
 router.get(
   "/:id",
 //   requirePermission(PERMISSIONS.CATEGORY_READ),

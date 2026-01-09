@@ -38,7 +38,7 @@
 
 /**
  * @swagger
- * /api/v1/health/status:
+ * /health/status:
  *   get:
  *     summary: Get detailed system status
  *     tags: [Health]

@@ -24,9 +24,11 @@ const options: Options = {
   definition: swaggerConfig,
   apis: [
     // Scan route files for endpoint documentation
-    path.join(__dirname, '../routes/**/*.ts'),
+    './src/routes/**/*.ts',
     // Scan schema files for component schemas
-    path.join(__dirname, './schemas/**/*.ts'),
+    './src/docs/schemas/**/*.ts',
+    // Scan path files for endpoint definitions
+    './src/docs/paths/**/*.ts',
   ],
 };
 

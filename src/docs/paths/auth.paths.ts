@@ -1,22 +1,22 @@
 /**
  * @swagger
  * tags:
- *   name: Auth
+ *   name: Authentication
  *   description: User authentication and authorization
  */
 
 /**
  * @swagger
- * /api/v1/auth/register:
+ * /auth/signup:
  *   post:
  *     summary: Register a new user
- *     tags: [Auth]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreateUserRequest'
+ *             $ref: '#/components/schemas/SignUpRequest'
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -40,10 +40,10 @@
 
 /**
  * @swagger
- * /api/v1/auth/login:
+ * /auth/signin:
  *   post:
  *     summary: Login user
- *     tags: [Auth]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -73,10 +73,10 @@
 
 /**
  * @swagger
- * /api/v1/auth/logout:
+ * /auth/signout:
  *   post:
  *     summary: Logout user
- *     tags: [Auth]
+ *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -92,10 +92,10 @@
 
 /**
  * @swagger
- * /api/v1/auth/me:
+ * /auth/me:
  *   get:
  *     summary: Get current user profile
- *     tags: [Auth]
+ *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []
  *     responses:

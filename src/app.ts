@@ -9,7 +9,7 @@ import { supabaseServer } from "./config/supabase/server-client";
 import { errorHandler } from "./middlewares/error.middleware";
 import { ApiError } from "./utils/error";
 import router from "./routes";
-import { swaggerDocs } from './docs';
+import { setupSwaggerDocs } from './docs';
 
 
 dotenv.config();
@@ -37,22 +37,17 @@ app.get("/", (req: Request, res: Response) => {
     message: "VAULT Backend API is running!",
     endpoints: {
       test: "GET /api/test - Check all connections",
-      docs: "Coming soon...",
+      docs: "GET /api-docs - API Documentation",
     },
     timestamp: new Date().toISOString(),
   });
 });
 
-app.get('/', (req, res) => {
-  res.redirect('/api-docs');
-});
-
 // API Routes
 app.use("/api/v1", router);
 
-
-
-
+// Setup Swagger Documentation
+setupSwaggerDocs(app, Number(port));
 
 app.use(errorHandler)
 

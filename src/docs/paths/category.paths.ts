@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /api/v1/categories:
+ * /categories:
  *   get:
  *     summary: Get all categories
  *     tags: [Categories]
@@ -90,7 +90,7 @@
 
 /**
  * @swagger
- * /api/v1/categories/{id}:
+ * /categories/{id}:
  *   get:
  *     summary: Get category by ID
  *     tags: [Categories]

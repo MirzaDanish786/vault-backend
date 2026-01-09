@@ -4,7 +4,6 @@ import app from './app.js';
 import { env } from '@/config/env';
 import prisma from '@/lib/prisma/client';
 import { logger } from '@/utils/logger';
-import { swaggerDocs } from './docs';
 
 const PORT = env.PORT; 
 
@@ -14,8 +13,6 @@ async function startServer() {
         console.log(' Database connected successfully! (via Prisma/pg adapter)');
 
         app.listen(PORT, () => {
-          swaggerDocs(app, PORT);
-
             console.log(` Server listening on port: ${PORT}`);
             console.log(` API URL: http://localhost:${PORT}`);
         });
