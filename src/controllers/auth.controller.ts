@@ -15,6 +15,14 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
+  /**
+ * @swagger
+ * /api/v1/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     description: Creates a new user account
+ */
   //   SignUp Controller:
   signUp = async (req: Request, res: Response): Promise<void> => {
     const validation = signUpSchema.safeParse(req.body);

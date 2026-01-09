@@ -13,6 +13,7 @@
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"],
+      "@docs/*": ["src/docs/*"],
       "@config/*": ["config/*"],
       "@lib/*": ["lib/*"],
       "@utils/*": ["utils/*"],
