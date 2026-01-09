@@ -78,6 +78,7 @@ export class ApiResponse<T = any> {
     return new ApiResponse(false, {
       error: { code, message },
       meta,
+      statusCode: 401
     });
   }
 

@@ -5,6 +5,7 @@ import {
   categorySlugSchema,
   createCategorySchema,
   ICreateCategoryInput,
+  updateCategorySchema,
 } from "@/services/category";
 import { ApiResponse } from "@/utils/api-response";
 import { logger } from "@/utils/logger";
@@ -14,6 +15,7 @@ export class CategoryController {
   constructor() {
     this.categoryService = new CategoryService();
   }
+  // Create:
   createCategory = async (req: Request, res: Response) => {
     const validation = createCategorySchema.safeParse(req.body);
     if (!validation.success) {
@@ -32,6 +34,7 @@ export class CategoryController {
     ApiResponse.send(res, resposne);
   };
 
+  // Get by Id:
   findCategoryById = async (req: Request, res: Response) => {
     const validation = categoryIdSchema.safeParse(req.params.id);
     if (!validation.success) {
@@ -50,6 +53,7 @@ export class CategoryController {
     ApiResponse.send(res, apiResponse);
   };
 
+  // Get by slug:
   findCategoryBySlug = async (req: Request, res: Response) => {
     const validation = categorySlugSchema.safeParse(req.params.slug);
     if (!validation.success) {
@@ -64,6 +68,7 @@ export class CategoryController {
     ApiResponse.send(res, apiResponse);
   };
 
+  // Get all by filters such as searching, pagination, etc...
   findAllCategoriesByFilters = async (req: Request, res: Response) => {
     const validationFilters = categoryFiltersSchema.safeParse(req.query);
     logger.debug("query...",req.query)
@@ -78,5 +83,22 @@ export class CategoryController {
     const apiResponse = ApiResponse.success(result);
     ApiResponse.send(res, apiResponse);
   };
+
+  // Update:
+  updateCategory = async(req:Request, res:Response)=>{
+    const validationData = updateCategorySchema.safeParse(req.body)
+    logger.debug("=========body data", {validationData})
+      if (!validationData.success) {
+      const firstError = validationData.error.issues[0].message || "Invalid";
+      const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
+      logger.error("Validation error", { error: firstError });
+      return ApiResponse.send(res, response);
+    }
+    const validatedData = validationData.data;
+    const result = await this.categoryService.update(validatedData.id,validatedData)
+    logger.info("Category updated successfully", { result });
+    const apiResponse = ApiResponse.success(result)
+    ApiResponse.send(res, apiResponse)
+  }
 }
 export const categoryController = new CategoryController();

@@ -19,10 +19,16 @@ router.get(
   //   requirePermission(PERMISSIONS.CATEGORY_READ),
   categoryController.findCategoryById
 );
+router.get("/slug/:slug", categoryController.findCategoryBySlug);
 
 // Find categories by filters and searching API route:
-router.get("/", categoryController.findAllCategoriesByFilters)
+router.get("/", categoryController.findAllCategoriesByFilters);
 
-router.get("/slug/:slug", categoryController.findCategoryBySlug);
+router.put(
+  "/",
+  authenticate,
+  requirePermission(PERMISSIONS.CATEGORY_WRITE),
+  categoryController.updateCategory
+);
 
 export default router;

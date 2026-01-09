@@ -29,7 +29,7 @@ export const createCategorySchema = z.object({
   parentId: z.string().cuid("Invalid parent category ID").optional(),
 
   isActive: z.boolean().default(true),
-  sortOrder: z.number().int().min(0).max(999).default(0),
+  sortOrder: z.number().int().min(10).optional(),
 });
 
 export const updateCategorySchema = createCategorySchema.partial().extend({

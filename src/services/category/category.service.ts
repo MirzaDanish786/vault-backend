@@ -10,6 +10,7 @@ import {
   CategoryFilters,
   CategoryValidator,
   CateogoryIdInput,
+  UpdateCategoryInput,
 } from "./category.validator";
 import slugify from "slugify";
 import { logger } from "@/utils/logger";
@@ -35,7 +36,7 @@ export class CategoryService {
       }
       const currentCategory = allCategories.find((c) => c.id === currentId);
       if (!currentCategory) break;
-      visited.add(currentId);  
+      visited.add(currentId);
       currentId = currentCategory.parentId;
     }
   };
@@ -65,7 +66,7 @@ export class CategoryService {
       }
       const currentCategory = allCategories.find((c) => c.id === currentId);
       if (!currentCategory) break;
-      visited.add(currentId);  
+      visited.add(currentId);
       currentId = currentCategory.parentId;
     }
   };
@@ -228,7 +229,7 @@ export class CategoryService {
       includeChildren,
       includeProducts,
     } = validateFilters;
-    console.log(validateFilters)
+    console.log(validateFilters);
     const skip = (page - 1) * limit;
     const where: Prisma.CategoryWhereInput = {};
     if (isActive !== undefined) {
@@ -273,7 +274,7 @@ export class CategoryService {
       }),
     ]);
 
-    let finalCategories:ICategory[] = categories as ICategory[];
+    let finalCategories: ICategory[] = categories as ICategory[];
     if (includeChildren) {
       const categoriesId = categories.map((cat) => cat.id);
 
@@ -287,28 +288,33 @@ export class CategoryService {
       });
 
       type CategoryWithChildren = Prisma.CategoryGetPayload<{}> & {
-        children: Prisma.CategoryGetPayload<{}>[]
-      }
+        children: Prisma.CategoryGetPayload<{}>[];
+      };
       const categoryMap = new Map<string, CategoryWithChildren>(
         categories.map((c) => [c.id, { ...c, children: [] }])
       );
-      childrens.forEach(child =>{
-        const parent = categoryMap.get(child.parentId!)
-        if(parent){
-          parent.children.push(child)
+      childrens.forEach((child) => {
+        const parent = categoryMap.get(child.parentId!);
+        if (parent) {
+          parent.children.push(child);
         }
-      })
-      finalCategories = Array.from(categoryMap.values())
+      });
+      finalCategories = Array.from(categoryMap.values());
     }
-    if(treeFormat){
-      const buildTree = (nodes: ICategory[], parentId: string | null = null):ICategory[]=>{
-        return nodes.filter(node => node.parentId === parentId).map((node)=>({
-          ...node,
-          children: buildTree(nodes, node.id)
-        }))
-      }
+    if (treeFormat) {
+      const buildTree = (
+        nodes: ICategory[],
+        parentId: string | null = null
+      ): ICategory[] => {
+        return nodes
+          .filter((node) => node.parentId === parentId)
+          .map((node) => ({
+            ...node,
+            children: buildTree(nodes, node.id),
+          }));
+      };
       finalCategories = buildTree(finalCategories);
-      console.log(finalCategories)
+      console.log(finalCategories);
     }
 
     const totalPages = Math.ceil(total / limit);
@@ -326,5 +332,74 @@ export class CategoryService {
         hasPreviousPage,
       },
     };
+  };
+
+  // Update:
+  update = async (
+    id: string,
+    data: UpdateCategoryInput
+  ): Promise<ICategory> => {
+    const validatedId = CategoryValidator.validateId(id);
+    const validatedData = CategoryValidator.validateUpdate({
+      ...data,
+      id: validatedId,
+    });
+
+    const isCategoryExist = await prisma.category.findUnique({
+      where: {
+        id: validatedId,
+      },
+    });
+
+    if (!isCategoryExist) {
+      throw new CategoryError(
+        "CATEGORY_NOT_FOUND",
+        "Category is not found!",
+        404
+      );
+    }
+    let newSlug = undefined;
+    if (validatedData.name !== undefined){
+      newSlug = await this.generateUniqueSlug(validatedData.name)
+    }
+
+    if (validatedData.parentId !== undefined) {
+      if (validatedData.parentId === null) {
+      } else {
+        const parent = await prisma.category.findUnique({
+          where: {
+            id: validatedData.parentId,
+          },
+        });
+        if (!parent) {
+          throw new CategoryError("INVALID_PARENT", "Parent not found!", 404);
+        }
+        const allCategoires = await this.getAllCategoriesForValidation();
+        await this.checkCircularReferenceOnUpdate(
+          validatedData.id,
+          validatedData.parentId,
+          allCategoires
+        );
+      }
+    }
+
+    const updatedCategory = await prisma.category.update({
+      where:{
+        id: validatedId
+      },
+      data:{
+        name: validatedData.name,
+        slug: newSlug,
+        description: validatedData.description,
+        metaTitle: validatedData.metaTitle,
+        metaDescription: validatedData.metaDescription,
+        imageUrl: validatedData.imageUrl,
+        parentId: validatedData.parentId,
+        isActive: validatedData.isActive,
+        sortOrder: validatedData.sortOrder,
+      }
+    })
+    
+    return updatedCategory
   };
 }
