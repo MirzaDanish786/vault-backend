@@ -32,9 +32,7 @@ export const createCategorySchema = z.object({
   sortOrder: z.number().int().min(10).optional(),
 });
 
-export const updateCategorySchema = createCategorySchema.partial().extend({
-  id: z.string().cuid("Invalid category ID"),
-});
+export const updateCategorySchema = createCategorySchema.partial();
 
 export const categorySlugSchema = z
   .string()

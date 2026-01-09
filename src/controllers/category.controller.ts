@@ -3,6 +3,7 @@ import {
   categoryIdSchema,
   CategoryService,
   categorySlugSchema,
+  CategoryValidator,
   createCategorySchema,
   ICreateCategoryInput,
   updateCategorySchema,
@@ -71,7 +72,7 @@ export class CategoryController {
   // Get all by filters such as searching, pagination, etc...
   findAllCategoriesByFilters = async (req: Request, res: Response) => {
     const validationFilters = categoryFiltersSchema.safeParse(req.query);
-    logger.debug("query...",req.query)
+    logger.debug("query...", req.query);
     if (!validationFilters.success) {
       const firstError = validationFilters.error.issues[0].message || "Invalid";
       const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
@@ -85,20 +86,42 @@ export class CategoryController {
   };
 
   // Update:
-  updateCategory = async(req:Request, res:Response)=>{
-    const validationData = updateCategorySchema.safeParse(req.body)
-    logger.debug("=========body data", {validationData})
-      if (!validationData.success) {
+  updateCategory = async (req: Request, res: Response) => {
+    const {id} = req.params;
+    const categoryId = CategoryValidator.validateId(id)
+
+    const validationData = updateCategorySchema.safeParse(req.body);
+    logger.debug("=========body data", { validationData });
+    if (!validationData.success) {
       const firstError = validationData.error.issues[0].message || "Invalid";
       const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
       logger.error("Validation error", { error: firstError });
       return ApiResponse.send(res, response);
     }
+
     const validatedData = validationData.data;
-    const result = await this.categoryService.update(validatedData.id,validatedData)
+    const result = await this.categoryService.update(
+      categoryId,
+      validatedData
+    );
     logger.info("Category updated successfully", { result });
-    const apiResponse = ApiResponse.success(result)
-    ApiResponse.send(res, apiResponse)
-  }
+    const apiResponse = ApiResponse.success(result);
+    ApiResponse.send(res, apiResponse);
+  };
+
+  // Delete:
+  deleteCategory = async (req: Request, res: Request) => {
+    const validationData = categoryIdSchema.safeParse(req.params.id);
+    if (!validationData.success) {
+      const firstError = validationData.error.issues[0].message || "Invalid";
+      const response = ApiResponse.badRequest("VALIDATION_ERROR", firstError);
+      logger.error("Validation error", { error: firstError });
+      return ApiResponse.send(res, response);
+    }
+    const validatedId = validationData.data;
+    const result = await this.categoryService.delete(validatedId);
+    const apiResponse = ApiResponse.success(result);
+    ApiResponse.send(res, apiResponse);
+  };
 }
 export const categoryController = new CategoryController();

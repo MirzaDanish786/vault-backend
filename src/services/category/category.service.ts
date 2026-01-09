@@ -342,7 +342,7 @@ export class CategoryService {
     const validatedId = CategoryValidator.validateId(id);
     const validatedData = CategoryValidator.validateUpdate({
       ...data,
-      id: validatedId,
+      // id: validatedId,
     });
 
     const isCategoryExist = await prisma.category.findUnique({
@@ -359,8 +359,8 @@ export class CategoryService {
       );
     }
     let newSlug = undefined;
-    if (validatedData.name !== undefined){
-      newSlug = await this.generateUniqueSlug(validatedData.name)
+    if (validatedData.name !== undefined) {
+      newSlug = await this.generateUniqueSlug(validatedData.name);
     }
 
     if (validatedData.parentId !== undefined) {
@@ -376,7 +376,7 @@ export class CategoryService {
         }
         const allCategoires = await this.getAllCategoriesForValidation();
         await this.checkCircularReferenceOnUpdate(
-          validatedData.id,
+          id,
           validatedData.parentId,
           allCategoires
         );
@@ -384,10 +384,10 @@ export class CategoryService {
     }
 
     const updatedCategory = await prisma.category.update({
-      where:{
-        id: validatedId
+      where: {
+        id: validatedId,
       },
-      data:{
+      data: {
         name: validatedData.name,
         slug: newSlug,
         description: validatedData.description,
@@ -397,9 +397,47 @@ export class CategoryService {
         parentId: validatedData.parentId,
         isActive: validatedData.isActive,
         sortOrder: validatedData.sortOrder,
-      }
-    })
-    
-    return updatedCategory
+      },
+    });
+
+    return updatedCategory;
+  };
+
+  // Delete:
+  delete = async (id: CateogoryIdInput): Promise<ICategory> => {
+    const validatedId = CategoryValidator.validateId(id);
+    const categoryToDelete = await prisma.category.findUnique({
+      where: {
+        id: validatedId,
+      },
+      include: {
+        _count: {
+          select: {
+            products: true,
+            children: true,
+          },
+        },
+      },
+    });
+    if (!categoryToDelete) {
+      throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found", 404);
+    }
+    if (categoryToDelete._count.products > 0) {
+      throw new CategoryError(
+        "CATEGORY_HAS_PRODUCTS",
+        "Category with products can't be deleted!",
+        403
+      );
+    }
+    if (categoryToDelete._count.children > 0) {
+      throw new CategoryError(
+        "CATEGORY_HAS_CHILDREN",
+        "Category with children can't be deleted!",
+        403
+      );
+    }
+    return await prisma.category.delete({where:{
+      id: validatedId
+    }})
   };
 }

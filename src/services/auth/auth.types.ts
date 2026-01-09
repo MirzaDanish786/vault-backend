@@ -20,7 +20,6 @@ export interface AuthSession {
   user: any;
 }
 
-export type StatusCode = 200 | 201 | 400 | 401 | 404 | 409 | 500
 export interface AuthUser {
   id: string;
   name: string;
