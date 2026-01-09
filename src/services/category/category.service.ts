@@ -92,13 +92,13 @@ export class CategoryService {
     return slug;
   }
 
-  private async generateSortOrder(): Promise<number> {
-    // here in this funcion we generate the sortorder with the gap of 10:
+  private async generateSortOrder(parentId?: string | null): Promise<number> {
     const maxSortOrder = await prisma.category.aggregate({
+      where: { parentId: parentId || null }, 
       _max: { sortOrder: true },
     });
-    const next = (maxSortOrder._max.sortOrder ?? 0) + 10;
-    return next;
+
+    return (maxSortOrder._max.sortOrder ?? -10) + 10;
   }
 
   //   ======CRUD============
@@ -125,7 +125,7 @@ export class CategoryService {
         allCategories
       );
     }
-    const sortOrder = await this.generateSortOrder();
+    const sortOrder = validatedData.sortOrder ?? await this.generateSortOrder(validatedData.parentId);
     const category = await prisma.category.create({
       data: {
         name: validatedData.name,
@@ -304,13 +304,15 @@ export class CategoryService {
     if (treeFormat) {
       const buildTree = (
         nodes: ICategory[],
-        parentId: string | null = null
+        parentId: string | null = null,
+        depth: number = 0
       ): ICategory[] => {
         return nodes
           .filter((node) => node.parentId === parentId)
           .map((node) => ({
             ...node,
-            children: buildTree(nodes, node.id),
+            depth,
+            children: buildTree(nodes, node.id, depth + 1),
           }));
       };
       finalCategories = buildTree(finalCategories);
@@ -436,8 +438,10 @@ export class CategoryService {
         403
       );
     }
-    return await prisma.category.delete({where:{
-      id: validatedId
-    }})
+    return await prisma.category.delete({
+      where: {
+        id: validatedId,
+      },
+    });
   };
 }
