@@ -1,40 +1,31 @@
+export const authSchema = {};
+
 /**
  * @swagger
  * components:
  *   schemas:
  *     User:
  *       type: object
- *       required:
- *         - email
- *         - name
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
- *           readOnly: true
- *           example: '123e4567-e89b-12d3-a456-426614174000'
+ *         name:
+ *           type: string
  *         email:
  *           type: string
  *           format: email
- *           example: 'user@example.com'
- *         name:
- *           type: string
- *           example: 'John Doe'
  *         role:
  *           type: string
  *           enum: [USER, ADMIN]
- *           default: 'USER'
- *         isEmailVerified:
- *           type: boolean
- *           default: false
- *         createdAt:
- *           type: string
- *           format: date-time
- *           readOnly: true
- *         updatedAt:
- *           type: string
- *           format: date-time
- *           readOnly: true
+ *         profile:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             avatar:
+ *               type: string
+ *               nullable: true
  * 
  *     SignUpRequest:
  *       type: object
@@ -43,18 +34,23 @@
  *         - password
  *         - name
  *       properties:
+ *         name:
+ *           type: string
+ *           minLength: 3
+ *           maxLength: 100
  *         email:
  *           type: string
  *           format: email
- *           example: 'user@example.com'
  *         password:
  *           type: string
  *           format: password
  *           minLength: 6
- *           example: 'password123'
- *         name:
+ *           maxLength: 50
+ *           description: Must contain uppercase, lowercase, number, and special character
+ *         role:
  *           type: string
- *           example: 'John Doe'
+ *           enum: [USER, ADMIN]
+ *           default: USER
  * 
  *     LoginRequest:
  *       type: object
@@ -65,11 +61,10 @@
  *         email:
  *           type: string
  *           format: email
- *           example: 'user@example.com'
  *         password:
  *           type: string
  *           format: password
- *           example: 'password123'
+ *           minLength: 6
  * 
  *     AuthResponse:
  *       type: object
@@ -79,18 +74,22 @@
  *           example: true
  *         message:
  *           type: string
- *           example: 'Authentication successful'
+ *         data:
+ *           $ref: '#/components/schemas/User'
+ * 
+ *     MeResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
  *         data:
  *           type: object
  *           properties:
  *             user:
  *               $ref: '#/components/schemas/User'
- *             accessToken:
- *               type: string
- *               example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
- *             refreshToken:
- *               type: string
- *               example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
  * 
  *     RefreshTokenRequest:
  *       type: object
@@ -99,6 +98,4 @@
  *       properties:
  *         refreshToken:
  *           type: string
- *           example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
  */
-export const authSchema = {};

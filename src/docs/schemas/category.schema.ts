@@ -1,83 +1,86 @@
+export const categorySchema = {};
+
 /**
  * @swagger
  * components:
  *   schemas:
  *     Category:
  *       type: object
- *       required:
- *         - name
- *         - slug
  *       properties:
  *         id:
  *           type: string
  *           format: uuid
- *           readOnly: true
- *           example: '123e4567-e89b-12d3-a456-426614174000'
  *         name:
  *           type: string
- *           example: 'Electronics'
  *         slug:
  *           type: string
- *           example: 'electronics'
  *         description:
  *           type: string
- *           example: 'Electronic devices and accessories'
- *         parentId:
- *           type: string
- *           format: uuid
  *           nullable: true
- *           example: null
+ *         metaTitle:
+ *           type: string
+ *           nullable: true
+ *         metaDescription:
+ *           type: string
+ *           nullable: true
  *         imageUrl:
  *           type: string
- *           format: uri
+ *           nullable: true
+ *         parentId:
+ *           type: string
  *           nullable: true
  *         isActive:
  *           type: boolean
- *           default: true
+ *         sortOrder:
+ *           type: integer
  *         createdAt:
  *           type: string
  *           format: date-time
- *           readOnly: true
  *         updatedAt:
  *           type: string
  *           format: date-time
- *           readOnly: true
+ *         children:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Category'
+ *         productCount:
+ *           type: integer
  * 
  *     CreateCategoryRequest:
  *       type: object
  *       required:
  *         - name
- *         - slug
  *       properties:
  *         name:
  *           type: string
- *           example: 'Electronics'
- *         slug:
- *           type: string
- *           example: 'electronics'
+ *           minLength: 2
+ *           maxLength: 255
  *         description:
  *           type: string
- *           example: 'Electronic devices and accessories'
- *         parentId:
+ *           maxLength: 2000
+ *         metaTitle:
  *           type: string
- *           format: uuid
- *           nullable: true
- *           example: null
+ *           maxLength: 255
+ *         metaDescription:
+ *           type: string
+ *           maxLength: 500
  *         imageUrl:
  *           type: string
  *           format: uri
+ *         parentId:
+ *           type: string
  *           nullable: true
+ *         isActive:
+ *           type: boolean
+ *           default: true
+ *         sortOrder:
+ *           type: integer
+ *           minimum: 10
  * 
  *     UpdateCategoryRequest:
  *       type: object
  *       properties:
  *         name:
- *           type: string
- *           example: 'Updated Electronics'
- *         slug:
- *           type: string
- *           example: 'updated-electronics'
- *         description:
  *           type: string
  *           example: 'Updated description'
  *         parentId:

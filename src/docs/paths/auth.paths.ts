@@ -25,17 +25,11 @@
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  *       400:
- *         description: Validation error or user already exists
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *         $ref: '#/components/responses/ValidationError'
+ *       409:
+ *         description: User already exists
  *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         $ref: '#/components/responses/ServerError'
  */
 
 /**
@@ -58,17 +52,32 @@
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  *       401:
- *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
+ *         $ref: '#/components/responses/UnauthorizedError'
  *       400:
- *         description: Validation error
+ *         $ref: '#/components/responses/ValidationError'
+ */
+
+/**
+ * @swagger
+ * /auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RefreshTokenRequest'
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ValidationError'
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
  */
 
 /**
@@ -104,14 +113,7 @@
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/User'
+ *               $ref: '#/components/schemas/MeResponse'
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  */
