@@ -1,5 +1,6 @@
+import type { SwaggerDefinition } from 'swagger-jsdoc';
+
 import { env } from '@/config/env';
-import { SwaggerDefinition } from 'swagger-jsdoc';
 // import { config } from '../config/env';
 
 const swaggerDefinition: SwaggerDefinition = {

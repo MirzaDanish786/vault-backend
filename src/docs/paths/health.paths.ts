@@ -36,5 +36,4 @@
  *                   example: true
  */
 
-
 export const healthPaths = {};

@@ -1,4 +1,4 @@
-import { UserRole } from "@/config/constants";
+import type { UserRole } from '@/config/constants';
 
 // export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
 
@@ -32,11 +32,10 @@ export interface AuthUser {
 }
 
 export interface AuthResult {
-  user: AuthUser
-  session: AuthSession;  
+  user: AuthUser;
+  session: AuthSession;
 }
 
 // success:
 // message?: string;
 //   statusCode: StatusCode;
-

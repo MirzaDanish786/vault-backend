@@ -1,5 +1,5 @@
-import { ErrorCode } from "@/types/error";
-import { MetaData } from "@/types/http";
+import type { ErrorCode } from '@/types/error';
+import type { MetaData } from '@/types/http';
 
 export class ApiResponse<T = any> {
   success: boolean;
@@ -23,8 +23,8 @@ export class ApiResponse<T = any> {
       data?: T;
       error?: { code: ErrorCode; message: string; details?: unknown };
       meta?: { path?: string; requestId?: string; [key: string]: unknown };
-      statusCode?:number;
-    }
+      statusCode?: number;
+    },
   ) {
     this.success = success;
     this.data = options?.data;
@@ -43,7 +43,7 @@ export class ApiResponse<T = any> {
   static created<T>(data: T, meta?: MetaData) {
     return new ApiResponse<T>(true, {
       data,
-      meta: { ...meta, status: "created" },
+      meta: { ...meta, status: 'created' },
     });
   }
 
@@ -51,7 +51,7 @@ export class ApiResponse<T = any> {
     code: ErrorCode,
     message: string,
     details?: unknown,
-    meta?: { [key: string]: string | undefined | unknown }
+    meta?: { [key: string]: string | undefined | unknown },
   ) {
     return new ApiResponse(false, {
       error: { code, message, details },
@@ -62,7 +62,7 @@ export class ApiResponse<T = any> {
     code: ErrorCode,
     message: string,
     details?: unknown,
-    meta?: { [key: string]: string | undefined | unknown }
+    meta?: { [key: string]: string | undefined | unknown },
   ) {
     return new ApiResponse(false, {
       error: { code, message, details },
@@ -71,21 +71,21 @@ export class ApiResponse<T = any> {
   }
 
   static unauthorized(
-    code: ErrorCode = "UNAUTHORIZED",
-    message: string = "Authentication required",
-    meta?: MetaData
+    code: ErrorCode = 'UNAUTHORIZED',
+    message: string = 'Authentication required',
+    meta?: MetaData,
   ) {
     return new ApiResponse(false, {
       error: { code, message },
       meta,
-      statusCode: 401
+      statusCode: 401,
     });
   }
 
   static forbidden(
-    code: ErrorCode = "FORBIDDEN",
-    message: string = "Insufficient permissions",
-    meta?: MetaData
+    code: ErrorCode = 'FORBIDDEN',
+    message: string = 'Insufficient permissions',
+    meta?: MetaData,
   ) {
     return new ApiResponse(false, {
       error: { code, message },
@@ -96,19 +96,14 @@ export class ApiResponse<T = any> {
   static notFound(resource: string, meta?: MetaData) {
     return new ApiResponse(false, {
       error: {
-        code: "NOT_FOUND",
+        code: 'NOT_FOUND',
         message: `${resource} not found`,
       },
       meta,
     });
   }
 
-  static conflict(
-    code: ErrorCode,
-    message: string,
-    details?: unknown,
-    meta?: MetaData
-  ) {
+  static conflict(code: ErrorCode, message: string, details?: unknown, meta?: MetaData) {
     return new ApiResponse(false, {
       error: { code, message, details },
       meta,
@@ -118,27 +113,27 @@ export class ApiResponse<T = any> {
   static internalError(error?: Error, meta?: MetaData) {
     return new ApiResponse(false, {
       error: {
-        code: "INTERNAL_SERVER_ERROR" as ErrorCode,
-        message: "An unexpected error occurred",
-        details:
-          process.env.NODE_ENV === "development" ? error?.message : undefined,
+        code: 'INTERNAL_SERVER_ERROR' as ErrorCode,
+        message: 'An unexpected error occurred',
+        details: process.env.NODE_ENV === 'development' ? error?.message : undefined,
       },
       meta,
     });
   }
 
   static send(res: any, apiResponse: ApiResponse, forceStatusCode?: number) {
-    const statusCode = forceStatusCode || apiResponse.statusCode || ApiResponse.getStatusCode(apiResponse);
+    const statusCode =
+      forceStatusCode || apiResponse.statusCode || ApiResponse.getStatusCode(apiResponse);
     const meta = res.metaData ?? {};
     res.status(statusCode).json({ ...apiResponse, meta });
   }
 
   private static getStatusCode(response: ApiResponse): number {
-    if(response.statusCode){
+    if (response.statusCode) {
       return response.statusCode;
     }
     if (response.success) {
-      if (response.meta?.status === "created") return 201;
+      if (response.meta?.status === 'created') return 201;
       return 200;
     }
 
@@ -153,7 +148,7 @@ export class ApiResponse<T = any> {
       INTERNAL_SERVER_ERROR: 500,
     };
 
-    return codeMap[response.error?.code || ""] || 400;
+    return codeMap[response.error?.code || ''] || 400;
   }
 }
 

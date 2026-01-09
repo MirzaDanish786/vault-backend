@@ -26,7 +26,7 @@ export const authSchema = {};
  *             avatar:
  *               type: string
  *               nullable: true
- * 
+ *
  *     SignUpRequest:
  *       type: object
  *       required:
@@ -51,7 +51,7 @@ export const authSchema = {};
  *           type: string
  *           enum: [USER, ADMIN]
  *           default: USER
- * 
+ *
  *     LoginRequest:
  *       type: object
  *       required:
@@ -65,7 +65,7 @@ export const authSchema = {};
  *           type: string
  *           format: password
  *           minLength: 6
- * 
+ *
  *     AuthResponse:
  *       type: object
  *       properties:
@@ -76,7 +76,7 @@ export const authSchema = {};
  *           type: string
  *         data:
  *           $ref: '#/components/schemas/User'
- * 
+ *
  *     MeResponse:
  *       type: object
  *       properties:
@@ -90,7 +90,7 @@ export const authSchema = {};
  *           properties:
  *             user:
  *               $ref: '#/components/schemas/User'
- * 
+ *
  *     RefreshTokenRequest:
  *       type: object
  *       required:

@@ -1,5 +1,6 @@
-import { UserRole } from "@/config/constants";
-import { Response } from "express";
+import { Response } from 'express';
+
+import type { UserRole } from '@/config/constants';
 
 declare global {
   namespace Express {

@@ -20,7 +20,7 @@
  *         timestamp:
  *           type: string
  *           format: date-time
- * 
+ *
  *     ValidationError:
  *       type: object
  *       properties:
@@ -42,7 +42,7 @@
  *         statusCode:
  *           type: integer
  *           example: 400
- * 
+ *
  *     SuccessResponse:
  *       type: object
  *       properties:
@@ -60,7 +60,7 @@
  *         timestamp:
  *           type: string
  *           format: date-time
- * 
+ *
  *     PaginationMeta:
  *       type: object
  *       properties:

@@ -77,7 +77,7 @@
  *                     $ref: '#/components/schemas/Category'
  *                 pagination:
  *                   $ref: '#/components/schemas/PaginationMeta'
- * 
+ *
  *   post:
  *     summary: Create a new category
  *     tags: [Categories]
@@ -146,7 +146,7 @@
  *                   $ref: '#/components/schemas/Category'
  *       404:
  *         $ref: '#/components/responses/NotFoundError'
- * 
+ *
  *   delete:
  *     summary: Delete category
  *     tags: [Categories]

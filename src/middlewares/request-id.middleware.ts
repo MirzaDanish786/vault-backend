@@ -1,40 +1,35 @@
-import { logger } from "@/utils/logger";
-import { randomUUID } from "crypto";
-import { Response, Request, NextFunction } from "express";
+import { randomUUID } from 'crypto';
 
-export const requestIdMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+import type { Response, Request, NextFunction } from 'express';
+
+import { logger } from '@/utils/logger';
+
+export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const requestId = randomUUID();
   const start = Date.now();
 
   req.requestId = requestId;
-  res.setHeader("X-Request-ID", requestId);
+  res.setHeader('X-Request-ID', requestId);
 
   logger.info({
     requestId,
     method: req.method,
     path: req.path,
     ip: req.ip,
-    userAgent: req.get("user-agent"),
-    msg: "Request started",
+    userAgent: req.get('user-agent'),
+    msg: 'Request started',
   });
 
-  res.on("finish", () => {
+  res.on('finish', () => {
     logger.info({
       requestId,
       method: req.method,
       path: req.path,
       statusCode: res.statusCode,
       durationMs: Date.now() - start,
-      msg: "Request completed",
+      msg: 'Request completed',
     });
   });
 
   next();
 };
-
-
-

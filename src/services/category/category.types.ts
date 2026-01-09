@@ -1,5 +1,5 @@
-import { StatusCode } from "@/types/http";
-import { ApiError } from "@/utils/error";
+import type { StatusCode } from '@/types/http';
+import { ApiError } from '@/utils/error';
 // import { StatusCode } from "../auth";
 
 export interface ICategory {
@@ -71,26 +71,25 @@ export interface IPaginatedCategories {
 }
 
 export const CATEGORY_ERROR_CODE = {
-  CATEGORY_NOT_FOUND: "CATEGORY_NOT_FOUND",
-  CATEGORY_HAS_PRODUCTS: "CATEGORY_HAS_PRODUCTS",
-  CATEGORY_HAS_CHILDREN: "CATEGORY_HAS_CHILDREN",
-  DUPLICATE_SLUG: "DUPLICATE_SLUG",
-  INVALID_PARENT: "INVALID_PARENT",
-  SELF_REFERENCE: "SELF_REFERENCE",
-  CIRCULAR_REFERENCE: "CIRCULAR_REFERENCE",
-  INVALID_SLUG: "INVALID_SLUG",
+  CATEGORY_NOT_FOUND: 'CATEGORY_NOT_FOUND',
+  CATEGORY_HAS_PRODUCTS: 'CATEGORY_HAS_PRODUCTS',
+  CATEGORY_HAS_CHILDREN: 'CATEGORY_HAS_CHILDREN',
+  DUPLICATE_SLUG: 'DUPLICATE_SLUG',
+  INVALID_PARENT: 'INVALID_PARENT',
+  SELF_REFERENCE: 'SELF_REFERENCE',
+  CIRCULAR_REFERENCE: 'CIRCULAR_REFERENCE',
+  INVALID_SLUG: 'INVALID_SLUG',
 } as const;
 
-export type CategoryErrorCode =
-  (typeof CATEGORY_ERROR_CODE)[keyof typeof CATEGORY_ERROR_CODE];
+export type CategoryErrorCode = (typeof CATEGORY_ERROR_CODE)[keyof typeof CATEGORY_ERROR_CODE];
 export class CategoryError extends ApiError {
   constructor(
     code: CategoryErrorCode,
     message: string,
     statusCode: StatusCode = 400,
-    details?: unknown
+    details?: unknown,
   ) {
     super(statusCode, code, message, details);
-    this.name = "CategoryError";
+    this.name = 'CategoryError';
   }
 }

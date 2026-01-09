@@ -1,15 +1,11 @@
-import { Request, Response, NextFunction } from "express";
-import { ApiError } from "@/utils/error";
-import { logger } from "@/utils/logger";
-import { ApiResponse } from "@/utils/api-response";
-import { ErrorCode } from "@/types/error";
+import type { Request, Response, NextFunction } from 'express';
 
-export function errorHandler(
-  err: unknown,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) {
+import type { ErrorCode } from '@/types/error';
+import { ApiResponse } from '@/utils/api-response';
+import { ApiError } from '@/utils/error';
+import { logger } from '@/utils/logger';
+
+export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
   const requestId = req.requestId;
   const path = req.path;
 
@@ -27,12 +23,12 @@ export function errorHandler(
         path,
         requestId,
         method: req.method,
-        ip: req.ip
+        ip: req.ip,
       },
-      statusCode: err.statusCode
+      statusCode: err.statusCode,
     });
 
-    logger.error("API error occurred", {
+    logger.error('API error occurred', {
       requestId,
       message: err.message,
       stack: err.stack,
@@ -43,7 +39,7 @@ export function errorHandler(
   }
 
   // For all other unknown errors
-  logger.error("Unhandled error", {
+  logger.error('Unhandled error', {
     requestId,
     message: error.message,
     stack: error.stack,
@@ -53,7 +49,7 @@ export function errorHandler(
     path,
     requestId,
     method: req.method,
-    ip: req.ip
+    ip: req.ip,
   });
 
   return ApiResponse.send(res, apiResponse);

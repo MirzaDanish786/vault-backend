@@ -45,7 +45,7 @@ export const categorySchema = {};
  *             $ref: '#/components/schemas/Category'
  *         productCount:
  *           type: integer
- * 
+ *
  *     CreateCategoryRequest:
  *       type: object
  *       required:
@@ -76,7 +76,7 @@ export const categorySchema = {};
  *         sortOrder:
  *           type: integer
  *           minimum: 10
- * 
+ *
  *     UpdateCategoryRequest:
  *       type: object
  *       properties:
@@ -94,7 +94,7 @@ export const categorySchema = {};
  *         isActive:
  *           type: boolean
  *           example: true
- * 
+ *
  *     CategoryListResponse:
  *       type: object
  *       properties:

@@ -1,27 +1,20 @@
-import prisma from "@/lib/prisma/client";
-import {
-  CategoryError,
-  ICategory,
-  ICategoryTree,
-  ICreateCategoryInput,
-  IPaginatedCategories,
-} from "./category.types";
-import {
-  CategoryFilters,
-  CategoryValidator,
-  CateogoryIdInput,
-  UpdateCategoryInput,
-} from "./category.validator";
-import slugify from "slugify";
-import { logger } from "@/utils/logger";
-import { Prisma } from "@/generated/prisma/client";
+import slugify from 'slugify';
+
+import type { ICategory, ICreateCategoryInput, IPaginatedCategories } from './category.types';
+import { CategoryError, ICategoryTree } from './category.types';
+import type { CategoryFilters, CateogoryIdInput, UpdateCategoryInput } from './category.validator';
+import { CategoryValidator } from './category.validator';
+
+import type { Prisma } from '@/generated/prisma/client';
+import prisma from '@/lib/prisma/client';
+import { logger } from '@/utils/logger';
 
 export class CategoryService {
   // ===Utils Methods====
   //   This method checks the circular reference on category creation time:
   private checkCircularReferenceOnCreate = async (
     parentId: string,
-    allCategories: Array<{ id: string; parentId: string | null }>
+    allCategories: Array<{ id: string; parentId: string | null }>,
   ): Promise<void> => {
     if (!parentId) return;
 
@@ -30,11 +23,11 @@ export class CategoryService {
     while (currentId) {
       if (visited.has(currentId)) {
         throw new CategoryError(
-          "CIRCULAR_REFERENCE",
-          "Circular reference detected in category hierarchy"
+          'CIRCULAR_REFERENCE',
+          'Circular reference detected in category hierarchy',
         );
       }
-      const currentCategory = allCategories.find((c) => c.id === currentId);
+      const currentCategory = allCategories.find(c => c.id === currentId);
       if (!currentCategory) break;
       visited.add(currentId);
       currentId = currentCategory.parentId;
@@ -45,26 +38,23 @@ export class CategoryService {
   private checkCircularReferenceOnUpdate = async (
     categoryId: string,
     newParentId: string,
-    allCategories: Array<{ id: string; parentId: string | null }>
+    allCategories: Array<{ id: string; parentId: string | null }>,
   ): Promise<void> => {
     if (!newParentId) return;
 
     if (categoryId === newParentId) {
-      throw new CategoryError(
-        "CIRCULAR_REFERENCE",
-        "Category cannot be its own parent"
-      );
+      throw new CategoryError('CIRCULAR_REFERENCE', 'Category cannot be its own parent');
     }
     let currentId: string | null = newParentId;
     const visited = new Set<string>([categoryId]);
     while (currentId) {
       if (visited.has(currentId)) {
         throw new CategoryError(
-          "CIRCULAR_REFERENCE",
-          "Circular reference detected: cannot set parent to a descendant"
+          'CIRCULAR_REFERENCE',
+          'Circular reference detected: cannot set parent to a descendant',
         );
       }
-      const currentCategory = allCategories.find((c) => c.id === currentId);
+      const currentCategory = allCategories.find(c => c.id === currentId);
       if (!currentCategory) break;
       visited.add(currentId);
       currentId = currentCategory.parentId;
@@ -94,7 +84,7 @@ export class CategoryService {
 
   private async generateSortOrder(parentId?: string | null): Promise<number> {
     const maxSortOrder = await prisma.category.aggregate({
-      where: { parentId: parentId || null }, 
+      where: { parentId: parentId || null },
       _max: { sortOrder: true },
     });
 
@@ -112,20 +102,14 @@ export class CategoryService {
       });
 
       if (!isParentExist) {
-        throw new CategoryError(
-          "INVALID_PARENT",
-          "Parent category not found",
-          404
-        );
+        throw new CategoryError('INVALID_PARENT', 'Parent category not found', 404);
       }
 
       const allCategories = await this.getAllCategoriesForValidation();
-      await this.checkCircularReferenceOnCreate(
-        validatedData.parentId,
-        allCategories
-      );
+      await this.checkCircularReferenceOnCreate(validatedData.parentId, allCategories);
     }
-    const sortOrder = validatedData.sortOrder ?? await this.generateSortOrder(validatedData.parentId);
+    const sortOrder =
+      validatedData.sortOrder ?? (await this.generateSortOrder(validatedData.parentId));
     const category = await prisma.category.create({
       data: {
         name: validatedData.name,
@@ -139,7 +123,7 @@ export class CategoryService {
         sortOrder,
       },
     });
-    logger.info("Category Service layer created the category successfully", {
+    logger.info('Category Service layer created the category successfully', {
       category,
     });
     return category;
@@ -147,7 +131,7 @@ export class CategoryService {
 
   findById = async (
     id: CateogoryIdInput,
-    includeProducts: boolean = false
+    includeProducts: boolean = false,
   ): Promise<ICategory | null> => {
     const validatedId = CategoryValidator.validateId(id);
 
@@ -158,7 +142,7 @@ export class CategoryService {
             products: {
               where: { isActive: true },
               take: 10,
-              orderBy: { createdAt: "desc" },
+              orderBy: { createdAt: 'desc' },
               select: {
                 id: true,
                 name: true,
@@ -175,9 +159,9 @@ export class CategoryService {
     });
 
     if (!category) {
-      throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found!", 404);
+      throw new CategoryError('CATEGORY_NOT_FOUND', 'Category not found!', 404);
     }
-    logger.info("Category Service layer fetched the category successfully", {
+    logger.info('Category Service layer fetched the category successfully', {
       category,
     });
     return category;
@@ -194,7 +178,7 @@ export class CategoryService {
           },
           take: 10,
           orderBy: {
-            createdAt: "desc",
+            createdAt: 'desc',
           },
         },
         children: {
@@ -202,15 +186,15 @@ export class CategoryService {
             isActive: true,
           },
           orderBy: {
-            sortOrder: "asc",
+            sortOrder: 'asc',
           },
         },
       },
     });
     if (!category) {
-      throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found!", 404);
+      throw new CategoryError('CATEGORY_NOT_FOUND', 'Category not found!', 404);
     }
-    logger.info("Category Service layer fetched the category successfully", {
+    logger.info('Category Service layer fetched the category successfully', {
       category,
     });
     return category;
@@ -240,9 +224,9 @@ export class CategoryService {
     }
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        { slug: { contains: search, mode: "insensitive" } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -253,10 +237,10 @@ export class CategoryService {
         skip,
         orderBy: [
           {
-            sortOrder: "asc",
+            sortOrder: 'asc',
           },
           {
-            name: "asc",
+            name: 'asc',
           },
         ],
         include: includeProducts
@@ -276,7 +260,7 @@ export class CategoryService {
 
     let finalCategories: ICategory[] = categories as ICategory[];
     if (includeChildren) {
-      const categoriesId = categories.map((cat) => cat.id);
+      const categoriesId = categories.map(cat => cat.id);
 
       const childrens = await prisma.category.findMany({
         where: {
@@ -284,16 +268,16 @@ export class CategoryService {
             in: categoriesId,
           },
         },
-        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       });
 
       type CategoryWithChildren = Prisma.CategoryGetPayload<{}> & {
         children: Prisma.CategoryGetPayload<{}>[];
       };
       const categoryMap = new Map<string, CategoryWithChildren>(
-        categories.map((c) => [c.id, { ...c, children: [] }])
+        categories.map(c => [c.id, { ...c, children: [] }]),
       );
-      childrens.forEach((child) => {
+      childrens.forEach(child => {
         const parent = categoryMap.get(child.parentId!);
         if (parent) {
           parent.children.push(child);
@@ -305,11 +289,11 @@ export class CategoryService {
       const buildTree = (
         nodes: ICategory[],
         parentId: string | null = null,
-        depth: number = 0
+        depth: number = 0,
       ): ICategory[] => {
         return nodes
-          .filter((node) => node.parentId === parentId)
-          .map((node) => ({
+          .filter(node => node.parentId === parentId)
+          .map(node => ({
             ...node,
             depth,
             children: buildTree(nodes, node.id, depth + 1),
@@ -337,10 +321,7 @@ export class CategoryService {
   };
 
   // Update:
-  update = async (
-    id: string,
-    data: UpdateCategoryInput
-  ): Promise<ICategory> => {
+  update = async (id: string, data: UpdateCategoryInput): Promise<ICategory> => {
     const validatedId = CategoryValidator.validateId(id);
     const validatedData = CategoryValidator.validateUpdate({
       ...data,
@@ -354,11 +335,7 @@ export class CategoryService {
     });
 
     if (!isCategoryExist) {
-      throw new CategoryError(
-        "CATEGORY_NOT_FOUND",
-        "Category is not found!",
-        404
-      );
+      throw new CategoryError('CATEGORY_NOT_FOUND', 'Category is not found!', 404);
     }
     let newSlug = undefined;
     if (validatedData.name !== undefined) {
@@ -374,14 +351,10 @@ export class CategoryService {
           },
         });
         if (!parent) {
-          throw new CategoryError("INVALID_PARENT", "Parent not found!", 404);
+          throw new CategoryError('INVALID_PARENT', 'Parent not found!', 404);
         }
         const allCategoires = await this.getAllCategoriesForValidation();
-        await this.checkCircularReferenceOnUpdate(
-          id,
-          validatedData.parentId,
-          allCategoires
-        );
+        await this.checkCircularReferenceOnUpdate(id, validatedData.parentId, allCategoires);
       }
     }
 
@@ -422,20 +395,20 @@ export class CategoryService {
       },
     });
     if (!categoryToDelete) {
-      throw new CategoryError("CATEGORY_NOT_FOUND", "Category not found", 404);
+      throw new CategoryError('CATEGORY_NOT_FOUND', 'Category not found', 404);
     }
     if (categoryToDelete._count.products > 0) {
       throw new CategoryError(
-        "CATEGORY_HAS_PRODUCTS",
+        'CATEGORY_HAS_PRODUCTS',
         "Category with products can't be deleted!",
-        403
+        403,
       );
     }
     if (categoryToDelete._count.children > 0) {
       throw new CategoryError(
-        "CATEGORY_HAS_CHILDREN",
+        'CATEGORY_HAS_CHILDREN',
         "Category with children can't be deleted!",
-        403
+        403,
       );
     }
     return await prisma.category.delete({

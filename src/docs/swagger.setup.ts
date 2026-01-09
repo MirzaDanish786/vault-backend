@@ -1,8 +1,12 @@
-import swaggerJSDoc, { Options } from 'swagger-jsdoc';
-import swaggerUi from 'swagger-ui-express';
-import { Application, Express, Request, Response } from 'express';
-import swaggerConfig from './swagger.config';
 import path from 'path';
+
+import type { Application, Request, Response } from 'express';
+import { Express } from 'express';
+import type { Options } from 'swagger-jsdoc';
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+
+import swaggerConfig from './swagger.config';
 
 // Import all schemas to ensure they're loaded
 import './schemas';
@@ -105,7 +109,7 @@ function validateSwaggerSpec(spec: OpenAPISpec): void {
   console.log('===================================');
   console.log(`📊 Total API Endpoints: ${pathsCount}`);
   console.log(`📊 Total Data Schemas: ${schemasCount}`);
-  
+
   if (pathsCount === 0) {
     console.warn('⚠️  Warning: No API endpoints found in documentation.');
     console.log('💡 Tip: Add @swagger comments to your route files.');

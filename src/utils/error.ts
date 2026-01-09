@@ -1,13 +1,13 @@
-import { StatusCode } from "@/services/auth"
+import type { StatusCode } from '@/services/auth';
 
-export class ApiError extends Error{
-    constructor(
-        public statusCode: StatusCode,
-        public code: string,
-        message: string,
-        public details?: unknown
-    ){
-        super(message)
-        this.name = "ApiError"
-    }
+export class ApiError extends Error {
+  constructor(
+    public statusCode: StatusCode,
+    public code: string,
+    message: string,
+    public details?: unknown,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }

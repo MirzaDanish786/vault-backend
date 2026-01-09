@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    
+
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"],
@@ -23,11 +23,11 @@
       "@types/*": ["types/*"],
       "@routes/*": ["routes/*"]
     },
-    
+
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["type.d.ts", "src/**/*"],
+  "include": ["types/**/*", "src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
