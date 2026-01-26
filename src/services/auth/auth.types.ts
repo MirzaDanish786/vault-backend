@@ -36,6 +36,9 @@ export interface AuthResult {
   session: AuthSession;
 }
 
+export interface ServiceInfoMessage {
+  message: string;
+}
 // success:
 // message?: string;
 //   statusCode: StatusCode;

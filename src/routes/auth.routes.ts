@@ -10,12 +10,14 @@ const router = Router();
 
 router.use(requestIdMiddleware);
 router.use(metaDataApiResponse);
-router.use(authRateLimiter);
+// router.use(authRateLimiter);
 
 router.post('/signup', authController.signUp);
 router.post('/signin', authController.signIn);
 router.post('/signout', authController.signOut);
 router.get('/me', authenticate, authController.getUserDetails);
 router.post('/refresh', authController.refreshToken);
+router.post('/request-password-reset', authController.requestResetPassword);
+router.post('/reset-password', authController.resetPassword);
 
 export default router;

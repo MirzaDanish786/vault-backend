@@ -110,6 +110,16 @@ export class ApiResponse<T = any> {
     });
   }
 
+  static message<T = any>(message: string, data?: T, meta?: MetaData) {
+    return new ApiResponse<T>(true, {
+      data: data ?? ({ message } as unknown as T), // automatically wrap message if data not provided
+      meta,
+    });
+  }
+
+  static successWithMessage<T = any>(message: string, data?: T, meta?: MetaData) {
+    return this.message<T>(message, data, meta);
+  }
   static internalError(error?: Error, meta?: MetaData) {
     return new ApiResponse(false, {
       error: {

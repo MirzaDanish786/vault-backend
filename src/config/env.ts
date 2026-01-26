@@ -31,6 +31,7 @@ const envSchema = z.object({
     .default('true')
     .transform(val => val === 'true'),
   API_URL: z.string().url().min(1, 'API URL is required'),
+  CLIENT_URL: z.string().url().min(1, 'CLIENT URL is required'),
 });
 
 export const env = envSchema.parse(process.env);
