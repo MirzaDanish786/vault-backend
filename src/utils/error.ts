@@ -1,4 +1,4 @@
-import { StatusCode } from "@/types/http";
+import type { StatusCode } from '@/types/http';
 
 export class ApiError extends Error {
   constructor(

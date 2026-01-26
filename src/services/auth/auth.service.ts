@@ -2,7 +2,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@supabase/supabase-js';
 
 import type { AuthResult } from './auth.types';
-import { AuthUser, SupabaseAuthUser } from './auth.types';
 import type { SignInInput, SignUpInput } from './auth.validator';
 import { signInSchema, validateSignInInput, validateSignUpInput } from './auth.validator';
 
@@ -47,7 +46,11 @@ export class AuthService {
         if (authError?.message.includes('already registered')) {
           throw new ApiError(409, 'USER_ALREADY_EXISTS', 'User already exists');
         }
-        throw new ApiError(500, 'AUTH_CREATION_FAILED', authError?.message!);
+        throw new ApiError(
+          500,
+          'AUTH_CREATION_FAILED',
+          authError?.message || 'Unknown authentication error',
+        );
       }
 
       supabaseUserId = authData.user.id;
@@ -231,6 +234,146 @@ export class AuthService {
     };
   }
 
+  async revokeTokens(userId: string): Promise<void> {
+    if (!userId) {
+      throw new ApiError(400, 'USER_ID_REQUIRED', 'User ID is required');
+    }
+
+    // Call an Edge Function that has admin access
+    const { error } = await supabaseServer.functions.invoke('revoke-user-tokens', {
+      body: { userId },
+    });
+
+    if (error) {
+      logger.error('Failed to revoke tokens via edge function', {
+        userId,
+        error: error.message,
+      });
+      throw new ApiError(500, 'REVOKE_TOKENS_FAILED', 'Failed to revoke user tokens');
+    }
+
+    logger.info('All tokens revoked for user via edge function', { userId });
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    if (!email) {
+      throw new ApiError(400, 'EMAIL_REQUIRED', 'Email is required');
+    }
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return;
+
+    const { error } = await supabaseServer.auth.resetPasswordForEmail(email, {
+      redirectTo: `${env.CLIENT_URL}/reset-password`,
+    });
+    if (error) {
+      logger.error('Password reset request failed', { email, error: error.message });
+      throw new ApiError(500, 'PASSWORD_RESET_FAILED', 'Failed to send reset email');
+    }
+  }
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    if (!token || !newPassword) {
+      throw new ApiError(400, 'INVALID_INPUT', 'Token and new password are required');
+    }
+    const tempClient = this.createTempSupabaseClient();
+
+    const {
+      data: { user },
+      error: tokenError,
+    } = await tempClient.auth.getUser(token);
+
+    if (tokenError || !user) {
+      throw new ApiError(401, 'INVALID_TOKEN', 'Invalid or expired reset token');
+    }
+
+    const { error: updateError } = await supabaseServer.auth.admin.updateUserById(user.id, {
+      password: newPassword,
+    });
+    if (updateError) {
+      logger.error('Password reset failed', { userId: user.id, error: updateError.message });
+      throw new ApiError(500, 'PASSWORD_UPDATE_FAILED', 'Failed to update password');
+    }
+
+    this.revokeTokens(user.id);
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    if (!token) {
+      throw new ApiError(400, 'TOKEN_REQUIRED', 'Verification token is required');
+    }
+
+    const { error, data } = await supabaseServer.auth.verifyOtp({
+      token_hash: token,
+      type: 'email',
+    });
+
+    if (error) {
+      logger.error('Email verification failed', { error: error.message });
+
+      if (error.message.includes('expired')) {
+        throw new ApiError(400, 'VERIFICATION_EXPIRED', 'Verification link has expired');
+      }
+
+      throw new ApiError(400, 'VERIFICATION_FAILED', 'Invalid verification token');
+    }
+
+    if (data.user?.id) {
+      await prisma.user.update({
+        where: { id: data.user.id },
+        data: {
+          emailVerified: true,
+        },
+      });
+    }
+  }
+
+  async resendVerificationEmail(email: string): Promise<void> {
+    try {
+      if (!email) {
+        throw new ApiError(400, 'EMAIL_REQUIRED', 'Email is required');
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, emailVerified: true },
+      });
+
+      if (!user) {
+        return;
+      }
+
+      if (user.emailVerified) {
+        throw new ApiError(400, 'ALREADY_VERIFIED', 'Email is already verified');
+      }
+
+      const { error } = await supabaseServer.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${env.CLIENT_URL}/verify-success`,
+        },
+      });
+
+      if (error) {
+        logger.error('Failed to resend verification email', {
+          email,
+          error: error.message,
+        });
+
+        if (error.message.includes('rate limit')) {
+          throw new ApiError(429, 'RATE_LIMITED', 'Please try again in a few minutes');
+        }
+
+        throw new ApiError(500, 'RESEND_FAILED', 'Failed to resend verification email');
+      }
+
+      logger.info('Verification email resent', { email, userId: user.id });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError(500, 'RESEND_FAILED', 'Failed to resend verification email');
+    }
+  }
   async getUser(userId: string) {
     if (!userId) {
       throw new ApiError(400, 'USER_ID_MISSING', 'User id is missing');
@@ -275,11 +418,12 @@ export class AuthService {
   private async syncMissingUser(userId: string) {
     try {
       const { data: user } = await supabaseServer.auth.admin.getUserById(userId);
-      if (user) {
+
+      if (user && user.user?.email) {
         await prisma.user.create({
           data: {
             id: userId,
-            email: user.user?.email!,
+            email: user.user?.email,
             name: user.user?.user_metadata.name || 'User',
             role: user.user?.user_metadata.role || 'USER',
             profile: {

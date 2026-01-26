@@ -69,3 +69,5 @@ prisma/dev.db-journal
 # Other OS temp files
 Thumbs.db
 tree.py
+
+todo/

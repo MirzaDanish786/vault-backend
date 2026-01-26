@@ -1,9 +1,13 @@
 import type { Request, Response } from 'express';
-import { NextFunction } from 'express';
 
 import { ACCESS_TOKEN_MAX_AGE, COOKIE_CONFIG, REFRESH_TOKEN_MAX_AGE } from '@/config/constants';
-import { isProduction } from '@/config/env';
-import { AuthService, signInSchema, signUpSchema } from '@/services/auth';
+import {
+  AuthService,
+  emailSchema,
+  resetPasswordSchema,
+  signInSchema,
+  signUpSchema,
+} from '@/services/auth';
 import { ApiResponse } from '@/utils/api-response';
 import { logger } from '@/utils/logger';
 
@@ -94,6 +98,32 @@ export class AuthController {
     const result = await this.authService.refreshToken(refreshToken);
     this.setAuthCookies(res, result.session);
     const apiResponse = ApiResponse.success(result.user);
+    ApiResponse.send(res, apiResponse);
+  };
+
+  requestResetPassword = async (req: Request, res: Response): Promise<void> => {
+    const validation = emailSchema.safeParse(req.body);
+    if (!validation.success) {
+      const firstError = validation.error.issues[0].message || 'Invalid';
+      const response = ApiResponse.badRequest('VALIDATION_ERROR', firstError);
+      return ApiResponse.send(res, response);
+    }
+    const validatedInput = validation.data.email;
+    await this.authService.requestPasswordReset(validatedInput);
+    const apiResponse = ApiResponse.successWithMessage('Verification Email send succes');
+    ApiResponse.send(res, apiResponse);
+  };
+
+  resetPassword = async (req: Request, res: Response): Promise<void> => {
+    const validation = resetPasswordSchema.safeParse(req.body);
+    if (!validation.success) {
+      const firstError = validation.error.issues[0].message || 'Invalid';
+      const response = ApiResponse.badRequest('VALIDATION_ERROR', firstError);
+      return ApiResponse.send(res, response);
+    }
+    const { token, newPassword } = validation.data;
+    await this.authService.resetPassword(token, newPassword);
+    const apiResponse = ApiResponse.successWithMessage('Password reset successfully!');
     ApiResponse.send(res, apiResponse);
   };
 
