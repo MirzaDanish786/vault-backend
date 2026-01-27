@@ -20,6 +20,7 @@ model User {
   isSeller Boolean   @default(false) @map("is_seller")
   sellerStatus SellerStatus @default(NOT_APPLIED) @map("seller_status")
 
+  isAppliedForSeller Boolean @default(false) @map("is_applied_for_seller")
   sellerAppliedAt DateTime? @map("seller_applied_at")
   sellerApprovedAt DateTime? @map("seller_approved_at")
   sellerRejectedAt DateTime? @map("seller_rejected_at")
@@ -28,7 +29,14 @@ model User {
   businessName      String?   @db.VarChar(255) @map("business_name") 
   businessEmail     String?   @unique @map("business_email") 
   businessPhone     String?   @db.VarChar(20) @map("business_phone") 
+  businessAddress   String?   @db.Text @map("business_address")
+  businessType      BusinessType? @map("business_type")
   taxId             String?   @db.VarChar(50) @map("tax_id") 
+  description       String?   @db.Text @map("description")
+  websiteUrl       String?   @map("website_url") 
+  documents         Json?     @map("documents")
+
+
 
   sellerRating      Float?    @default(0.0) @map("seller_rating") 
   totalSales        Int       @default(0) @map("total_sales")
@@ -49,6 +57,11 @@ model User {
   @@index([isSeller])
   @@index([sellerStatus])
   @@map("users")
+}
+
+enum BusinessType {
+  INDIVIDUAL
+  COMPANY
 }
 
 enum SellerStatus{

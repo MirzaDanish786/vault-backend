@@ -63,7 +63,7 @@ export class CategoryValidator {
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new CategoryError(
-          CATEGORY_ERROR_CODE.INVALID_PARENT,
+          CATEGORY_ERROR_CODE.VALIDATION_ERROR,
           'Validation failed',
           400,
           error.issues,
@@ -79,7 +79,7 @@ export class CategoryValidator {
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new CategoryError(
-          CATEGORY_ERROR_CODE.INVALID_PARENT,
+          CATEGORY_ERROR_CODE.VALIDATION_ERROR,
           'Validation failed',
           400,
           error.issues,
@@ -93,7 +93,7 @@ export class CategoryValidator {
     try {
       return categoryIdSchema.parse(id);
     } catch (error) {
-      throw new CategoryError(CATEGORY_ERROR_CODE.CATEGORY_NOT_FOUND, 'Invalid category ID');
+      throw new CategoryError(CATEGORY_ERROR_CODE.VALIDATION_ERROR, 'Invalid category ID');
     }
   }
 
@@ -103,7 +103,7 @@ export class CategoryValidator {
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new CategoryError(
-          CATEGORY_ERROR_CODE.INVALID_SLUG,
+          CATEGORY_ERROR_CODE.VALIDATION_ERROR,
           'Invalid filter parameters',
           400,
           error.issues,
@@ -119,7 +119,7 @@ export class CategoryValidator {
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new CategoryError(
-          CATEGORY_ERROR_CODE.INVALID_PARENT,
+          CATEGORY_ERROR_CODE.VALIDATION_ERROR,
           'Invalid filter parameters',
           400,
           error.issues,
