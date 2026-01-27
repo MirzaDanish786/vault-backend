@@ -1,4 +1,3 @@
-// src/services/file/file.service.ts
 import { Readable } from 'stream';
 
 import { v2 as cloudinary } from 'cloudinary';
@@ -24,7 +23,6 @@ export class FileService {
     });
   }
 
-  // Validate file before upload
   validateFile(file: Express.Multer.File): void {
     const MAX_SIZE = 10 * 1024 * 1024; // 10MB
     const ALLOWED_TYPES = [
@@ -66,11 +64,8 @@ export class FileService {
         {
           folder: `documents/${userId}`,
           public_id: `${documentType}_${Date.now()}`,
-          resource_type: 'auto', // Auto-detect image, video, raw
-          transformation: [
-            { quality: 'auto:good' }, // Optimize quality
-            { fetch_format: 'auto' }, // Auto format (webp for images)
-          ],
+          resource_type: 'auto',
+          transformation: [{ quality: 'auto:good' }, { fetch_format: 'auto' }],
           tags: ['seller_document', documentType, userId],
           context: {
             userId,
@@ -110,7 +105,6 @@ export class FileService {
       await cloudinary.uploader.destroy(publicId);
     } catch (error) {
       console.error('Failed to delete file:', error);
-      // Don't throw error for deletion failure
     }
   }
 
@@ -128,7 +122,6 @@ export class FileService {
   }
 
   private extractPublicIdFromUrl(url: string): string {
-    // Extract public_id from Cloudinary URL
     const matches = url.match(/upload\/(?:v\d+\/)?(.+?)\.(?:jpg|png|pdf|docx?)/);
     return matches ? matches[1] : url;
   }
