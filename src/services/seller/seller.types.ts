@@ -180,6 +180,11 @@ export interface IPublicSellerView {
 export const SELLER_ERROR_CODES = {
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
+
+  FILE_REQUIRED: 'FILE_REQUIRED',
+  FILE_TOO_LARGE: 'FILE_TOO_LARGE',
+  INVALID_FILE_TYPE: 'INVALID_FILE_TYPE',
+  UPLOAD_FAILED: 'UPLOAD_FAILED',
   // Application errors
   // This is the perfect archecture of this project like if follow this then we can easily scale our app, specially when the app is very large and enterprises level, the user mush accept the term and policies so after that he wil able to enter in our app, and also this is the core logic that every app should have even if they want to scale there app
   SELLER_ALREADY_APPLIED: 'SELLER_ALREADY_APPLIED',
