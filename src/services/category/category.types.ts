@@ -1,5 +1,5 @@
+import { ApiError } from '@/errors/general-api-error';
 import type { StatusCode } from '@/types/http';
-import { ApiError } from '@/utils/error';
 // import { StatusCode } from "../auth";
 
 export interface ICategory {

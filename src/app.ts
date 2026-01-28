@@ -7,11 +7,11 @@ import express from 'express';
 import { env } from './config/env';
 import { supabaseServer } from './config/supabase/server-client';
 import { setupSwaggerDocs } from './docs';
+import { ApiError } from './errors/general-api-error';
 import prisma from './lib/prisma/client';
 // import { supabaseServer } from "./lib/supabase/server-client";
 import { errorHandler } from './middlewares/error.middleware';
 import router from './routes';
-import { ApiError } from './utils/error';
 
 dotenv.config();
 

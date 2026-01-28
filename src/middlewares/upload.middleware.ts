@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import multer from 'multer';
 
-import { SellerError } from '@/services/seller/seller.types';
+import { FileError } from '@/errors/file.error';
 
 // Memory storage (process file then upload to Cloudinary)
 const storage = multer.memoryStorage();
@@ -21,7 +21,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new SellerError('INVALID_FILE_TYPE', 'Invalid file type', 400) as any);
+    cb(new FileError('INVALID_FILE_TYPE', 'Invalid file type', 400) as any);
   }
 };
 

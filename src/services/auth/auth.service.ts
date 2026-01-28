@@ -7,8 +7,8 @@ import { signInSchema, validateSignInInput, validateSignUpInput } from './auth.v
 
 import { env } from '@/config/env';
 import { supabaseServer } from '@/config/supabase/server-client';
+import { ApiError } from '@/errors/general-api-error';
 import prisma from '@/lib/prisma/client';
-import { ApiError } from '@/utils/error';
 import { logger } from '@/utils/logger';
 
 export class AuthService {

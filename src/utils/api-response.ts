@@ -1,3 +1,4 @@
+import { FileErrorCode } from '@/errors/file.error';
 import type { ErrorCode } from '@/types/error';
 import type { MetaData } from '@/types/http';
 
@@ -6,7 +7,7 @@ export class ApiResponse<T = any> {
   data?: T;
   statusCode?: number;
   error?: {
-    code: ErrorCode;
+    code: ErrorCode | FileErrorCode;
     message: string;
     details?: unknown;
   };
@@ -21,7 +22,7 @@ export class ApiResponse<T = any> {
     success: boolean,
     options?: {
       data?: T;
-      error?: { code: ErrorCode; message: string; details?: unknown };
+      error?: { code: ErrorCode | FileErrorCode; message: string; details?: unknown };
       meta?: { path?: string; requestId?: string; [key: string]: unknown };
       statusCode?: number;
     },
@@ -48,7 +49,7 @@ export class ApiResponse<T = any> {
   }
 
   static badRequest(
-    code: ErrorCode,
+    code: ErrorCode | FileErrorCode,
     message: string,
     details?: unknown,
     meta?: { [key: string]: string | undefined | unknown },

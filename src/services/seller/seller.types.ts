@@ -1,6 +1,6 @@
+import { ApiError } from '@/errors/general-api-error';
 import type { Role, SellerStatus, StoreStatus } from '@/generated/prisma/enums';
 import { StatusCode } from '@/types/http';
-import { ApiError } from '@/utils/error';
 
 const BUSINESS_TYPES = ['INDIVIDUAL', 'COMPANY'] as const;
 type BUSINESS_TYPE = (typeof BUSINESS_TYPES)[keyof typeof BUSINESS_TYPES];

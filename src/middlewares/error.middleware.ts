@@ -1,8 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 
+import { ApiError } from '@/errors/general-api-error';
 import type { ErrorCode } from '@/types/error';
 import { ApiResponse } from '@/utils/api-response';
-import { ApiError } from '@/utils/error';
 import { logger } from '@/utils/logger';
 
 export function errorHandler(err: unknown, req: Request, res: Response, next: NextFunction) {
