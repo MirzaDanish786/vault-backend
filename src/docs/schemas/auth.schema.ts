@@ -98,4 +98,29 @@ export const authSchema = {};
  *       properties:
  *         refreshToken:
  *           type: string
+ *
+ *     RequestPasswordResetRequest:
+ *       type: object
+ *       required:
+ *         - email
+ *       properties:
+ *         email:
+ *           type: string
+ *           format: email
+ *           example: 'user@example.com'
+ *
+ *     ResetPasswordRequest:
+ *       type: object
+ *       required:
+ *         - token
+ *         - newPassword
+ *       properties:
+ *         token:
+ *           type: string
+ *           description: Password reset token received in email
+ *         newPassword:
+ *           type: string
+ *           format: password
+ *           minLength: 8
+ *           example: 'NewP@ssw0rd!'
  */
