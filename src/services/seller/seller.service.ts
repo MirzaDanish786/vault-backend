@@ -31,6 +31,13 @@ export class SellerService {
     if (!user) {
       throw new SellerError('USER_NOT_FOUND', 'User not found', 404);
     }
+    if (user.role === 'ADMIN') {
+      throw new SellerError(
+        'CANNOT_MODIFY_ADMIN',
+        'You cannot apply as a seller as you are an admin',
+        400,
+      );
+    }
     if (user.isAppliedForSeller && user.sellerStatus === 'PENDING_VERIFICATION') {
       throw new SellerError(
         'SELLER_ALREADY_APPLIED',
@@ -120,7 +127,7 @@ export class SellerService {
     }
 
     const seller = await prisma.user.findUnique({
-      where: { id: sellerId },
+      where: { id: sellerId, isSeller: true },
       select: {
         id: true,
         email: true,
@@ -244,6 +251,7 @@ export class SellerService {
     const updatedSeller = await prisma.user.update({
       where: { id: sellerId },
       data: {
+        role: 'SELLER',
         sellerStatus: 'APPROVED',
         isSeller: true,
         sellerApprovedAt: new Date(),
