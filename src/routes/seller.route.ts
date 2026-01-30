@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { sellerController } from '@/controllers/seller.controller';
 import { authenticate, requireRole } from '@/middlewares/auth.middleware';
 import { metaDataApiResponse } from '@/middlewares/meta-data.middleware';
+import { paginationMiddleware } from '@/middlewares/pagination.middleware';
 import { requestIdMiddleware } from '@/middlewares/request-id.middleware';
 
 const router = Router();
@@ -36,6 +37,15 @@ router.patch(
   authenticate,
   requireRole('ADMIN'),
   sellerController.rejectSeller,
+);
+
+// Admin only - Get pending seller applications with pagination
+router.get(
+  '/pending/applications',
+  authenticate,
+  requireRole('ADMIN'),
+  paginationMiddleware({ defaultLimit: 10, maxLimit: 50 }),
+  sellerController.getPendingSellerApplications,
 );
 
 export default router;

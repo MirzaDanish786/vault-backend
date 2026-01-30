@@ -4,9 +4,11 @@ import { SellerApplicationInput, SellerValidator } from './seller.validator';
 import { ApiError } from '@/errors/general-api-error';
 import { SellerError } from '@/errors/seller.error';
 import prisma from '@/lib/prisma/client';
+import { PaginationParams, PaginatedResponse } from '@/types/pagination';
+import { createPaginatedResponse, getPrismaPaginationParams } from '@/utils/pagination';
 
 export class SellerService {
-  private async validateTaxId(taxId: string): Promise<void> {
+  private async validateTaxId(taxId: string, userId?: string): Promise<void> {
     const normalized = taxId.trim().toUpperCase();
 
     const TAX_ID_REGEX = /^[A-Z0-9-]{5,50}$/;
@@ -16,11 +18,33 @@ export class SellerService {
     }
 
     const existing = await prisma.user.findFirst({
-      where: { taxId: normalized },
+      where: {
+        taxId: normalized,
+        ...(userId && { id: { not: userId } }),
+      },
     });
 
     if (existing) {
       throw SellerError.taxIdExists(normalized);
+    }
+  }
+
+  private async validateBusinessEmail(businessEmail: string, userId?: string): Promise<void> {
+    const normalized = businessEmail.trim().toLowerCase();
+
+    const existing = await prisma.user.findFirst({
+      where: {
+        businessEmail: normalized,
+        ...(userId && { id: { not: userId } }),
+      },
+    });
+
+    if (existing) {
+      throw new SellerError(
+        'BUSINESS_EMAIL_EXISTS',
+        'Business email is already registered by another seller',
+        400,
+      );
     }
   }
 
@@ -49,7 +73,8 @@ export class SellerService {
       throw new SellerError('ALREADY_A_SELLER', 'You are already an approved seller', 400);
     }
 
-    await this.validateTaxId(validatedData.taxId);
+    await this.validateTaxId(validatedData.taxId, validatedData.userId);
+    await this.validateBusinessEmail(validatedData.businessEmail, validatedData.userId);
 
     const seller = await prisma.user.update({
       where: { id: validatedData.userId },
@@ -317,5 +342,107 @@ export class SellerService {
     });
 
     return updatedSeller;
+  };
+
+  getPendingSellerApplications = async (
+    adminId: string,
+    paginationParams: PaginationParams,
+  ): Promise<PaginatedResponse<IAdminSellerView>> => {
+    if (!adminId) {
+      throw new ApiError(400, 'ADMIN_ID_MISSING', 'Admin id is missing');
+    }
+
+    const totalItems = await prisma.user.count({
+      where: {
+        sellerStatus: 'PENDING_VERIFICATION',
+        isAppliedForSeller: true,
+      },
+    });
+
+    const sellers = await prisma.user.findMany({
+      where: {
+        sellerStatus: 'PENDING_VERIFICATION',
+        isAppliedForSeller: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        lastLoginAt: true,
+        isSeller: true,
+        sellerStatus: true,
+        sellerAppliedAt: true,
+        sellerApprovedAt: true,
+        sellerRejectedAt: true,
+        sellerRejectionReason: true,
+        businessName: true,
+        businessEmail: true,
+        businessPhone: true,
+        taxId: true,
+        sellerRating: true,
+        totalSales: true,
+        emailVerified: true,
+        phoneVerified: true,
+        store: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            storeStatus: true,
+            isActive: true,
+            createdAt: true,
+            _count: {
+              select: {
+                products: true,
+              },
+            },
+          },
+        },
+      },
+      ...getPrismaPaginationParams(paginationParams),
+      orderBy: {
+        sellerAppliedAt: 'desc',
+      },
+    });
+
+    const data: IAdminSellerView[] = sellers.map(seller => ({
+      id: seller.id,
+      email: seller.email,
+      name: seller.name,
+      role: seller.role,
+      isActive: seller.isActive,
+      createdAt: seller.createdAt,
+      lastLoginAt: seller.lastLoginAt,
+      isSeller: seller.isSeller,
+      sellerStatus: seller.sellerStatus,
+      sellerAppliedAt: seller.sellerAppliedAt,
+      sellerApprovedAt: seller.sellerApprovedAt,
+      sellerRejectedAt: seller.sellerRejectedAt,
+      sellerRejectionReason: seller.sellerRejectionReason,
+      businessName: seller.businessName,
+      businessEmail: seller.businessEmail,
+      businessPhone: seller.businessPhone,
+      taxId: seller.taxId,
+      sellerRating: seller.sellerRating,
+      totalSales: seller.totalSales,
+      emailVerified: seller.emailVerified,
+      phoneVerified: seller.phoneVerified,
+      store: seller.store
+        ? {
+            id: seller.store.id,
+            name: seller.store.name,
+            slug: seller.store.slug,
+            storeStatus: seller.store.storeStatus,
+            isActive: seller.store.isActive,
+            productCount: seller.store._count.products,
+            createdAt: seller.store.createdAt,
+          }
+        : null,
+    }));
+
+    return createPaginatedResponse(data, totalItems, paginationParams);
   };
 }

@@ -117,6 +117,39 @@ export class SellerController {
 
     ApiResponse.send(res, apiResponse);
   };
+
+  getPendingSellerApplications = async (req: Request, res: Response): Promise<void> => {
+    const adminId = req.user?.id;
+
+    if (!adminId) {
+      const response = ApiResponse.unauthorized(
+        'ADMIN_NOT_AUTHENTICATED',
+        'Admin not authenticated',
+      );
+      return ApiResponse.send(res, response);
+    }
+
+    if (!req.pagination) {
+      const response = ApiResponse.badRequest(
+        'PAGINATION_MISSING',
+        'Pagination params are missing',
+      );
+      return ApiResponse.send(res, response);
+    }
+
+    const result = await this.sellerService.getPendingSellerApplications(adminId, req.pagination);
+    const apiResponse = ApiResponse.success(result);
+
+    logger.info('Pending seller applications fetched successfully', {
+      adminId,
+      page: req.pagination.page,
+      limit: req.pagination.limit,
+      totalItems: result.pagination.totalItems,
+      requestId: req.requestId,
+    });
+
+    ApiResponse.send(res, apiResponse);
+  };
 }
 
 export const sellerController = new SellerController();

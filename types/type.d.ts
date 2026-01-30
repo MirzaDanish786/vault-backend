@@ -23,6 +23,7 @@ declare global {
         remaining: number;
         resetTime: number;
       };
+      pagination?: PaginationParams;
     }
 
     interface Response {
