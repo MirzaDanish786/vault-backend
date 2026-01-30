@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { SELLER_ERROR_CODES, SellerError } from './seller.types';
+import { SELLER_ERROR_CODES, SellerError } from '@/errors/seller.error';
 
 export const BUSINESS_TYPE = z.enum(['INDIVIDUAL', 'COMPANY']);
 
