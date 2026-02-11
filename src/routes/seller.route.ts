@@ -48,4 +48,29 @@ router.get(
   sellerController.getPendingSellerApplications,
 );
 
+// Admin only - Get all sellers with filters and pagination
+router.get(
+  '/all',
+  authenticate,
+  requireRole('ADMIN'),
+  paginationMiddleware({ defaultLimit: 10, maxLimit: 100 }),
+  sellerController.getAllSellers,
+);
+
+// Admin only - Suspend seller
+router.patch(
+  '/:sellerId/suspend',
+  authenticate,
+  requireRole('ADMIN'),
+  sellerController.suspendSeller,
+);
+
+// Admin only - Unsuspend seller
+router.patch(
+  '/:sellerId/unsuspend',
+  authenticate,
+  requireRole('ADMIN'),
+  sellerController.unsuspendSeller,
+);
+
 export default router;

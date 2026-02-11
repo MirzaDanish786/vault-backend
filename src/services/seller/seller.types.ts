@@ -176,3 +176,48 @@ export interface IPublicSellerView {
     shippingTime?: string; // "2-3 days"
   };
 }
+
+export interface ISellerFilters {
+  // Status filters
+  sellerStatus?: SellerStatus | SellerStatus[];
+  isActive?: boolean;
+  isSeller?: boolean;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
+
+  // Business type filter
+  businessType?: 'INDIVIDUAL' | 'COMPANY';
+
+  // Store status filter
+  storeStatus?: StoreStatus;
+  hasStore?: boolean;
+
+  // Rating filter
+  minRating?: number;
+  maxRating?: number;
+
+  // Sales filter
+  minSales?: number;
+  maxSales?: number;
+
+  // Date filters
+  appliedAfter?: Date | string;
+  appliedBefore?: Date | string;
+  approvedAfter?: Date | string;
+  approvedBefore?: Date | string;
+
+  // Search filters
+  search?: string; // Search in name, businessName, businessEmail
+  businessName?: string;
+  email?: string;
+
+  // Sorting
+  sortBy?:
+    | 'createdAt'
+    | 'sellerAppliedAt'
+    | 'sellerApprovedAt'
+    | 'sellerRating'
+    | 'totalSales'
+    | 'name';
+  sortOrder?: 'asc' | 'desc';
+}

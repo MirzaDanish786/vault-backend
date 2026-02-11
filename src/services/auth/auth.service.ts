@@ -131,7 +131,7 @@ export class AuthService {
       });
 
       if (authError) {
-        throw new ApiError(401, 'INVALID_CREDENTIALS', 'Invalid email or password');
+        throw new ApiError(400, 'INVALID_CREDENTIALS', 'Invalid email or password');
       }
 
       if (!authData.user || !authData.session) {

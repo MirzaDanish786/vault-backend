@@ -1,4 +1,4 @@
-import { IPublicSellerView, IAdminSellerView } from './seller.types';
+import { IPublicSellerView, IAdminSellerView, ISellerFilters } from './seller.types';
 import { SellerApplicationInput, SellerValidator } from './seller.validator';
 
 import { ApiError } from '@/errors/general-api-error';
@@ -444,5 +444,310 @@ export class SellerService {
     }));
 
     return createPaginatedResponse(data, totalItems, paginationParams);
+  };
+
+  getAllSellers = async (
+    filters: ISellerFilters,
+    paginationParams: PaginationParams,
+  ): Promise<PaginatedResponse<IAdminSellerView>> => {
+    const where: any = {};
+
+    // Status filters
+    if (filters.sellerStatus !== undefined) {
+      if (Array.isArray(filters.sellerStatus)) {
+        where.sellerStatus = { in: filters.sellerStatus };
+      } else {
+        where.sellerStatus = filters.sellerStatus;
+      }
+    } else {
+      // Default to APPROVED if no status filter provided
+      where.sellerStatus = 'APPROVED';
+    }
+
+    if (filters.isSeller !== undefined) {
+      where.isSeller = filters.isSeller;
+    }
+
+    if (filters.isActive !== undefined) {
+      where.isActive = filters.isActive;
+    }
+
+    if (filters.emailVerified !== undefined) {
+      where.emailVerified = filters.emailVerified;
+    }
+
+    if (filters.phoneVerified !== undefined) {
+      where.phoneVerified = filters.phoneVerified;
+    }
+
+    if (filters.businessType) {
+      where.businessType = filters.businessType;
+    }
+
+    if (filters.hasStore !== undefined) {
+      if (filters.hasStore) {
+        where.store = { isNot: null };
+      } else {
+        where.store = null;
+      }
+    }
+
+    if (filters.storeStatus) {
+      where.store = {
+        ...where.store,
+        storeStatus: filters.storeStatus,
+      };
+    }
+
+    if (filters.minRating !== undefined || filters.maxRating !== undefined) {
+      where.sellerRating = {};
+      if (filters.minRating !== undefined) {
+        where.sellerRating.gte = filters.minRating;
+      }
+      if (filters.maxRating !== undefined) {
+        where.sellerRating.lte = filters.maxRating;
+      }
+    }
+
+    if (filters.minSales !== undefined || filters.maxSales !== undefined) {
+      where.totalSales = {};
+      if (filters.minSales !== undefined) {
+        where.totalSales.gte = filters.minSales;
+      }
+      if (filters.maxSales !== undefined) {
+        where.totalSales.lte = filters.maxSales;
+      }
+    }
+
+    if (filters.appliedAfter || filters.appliedBefore) {
+      where.sellerAppliedAt = {};
+      if (filters.appliedAfter) {
+        where.sellerAppliedAt.gte = new Date(filters.appliedAfter);
+      }
+      if (filters.appliedBefore) {
+        where.sellerAppliedAt.lte = new Date(filters.appliedBefore);
+      }
+    }
+
+    if (filters.approvedAfter || filters.approvedBefore) {
+      where.sellerApprovedAt = {};
+      if (filters.approvedAfter) {
+        where.sellerApprovedAt.gte = new Date(filters.approvedAfter);
+      }
+      if (filters.approvedBefore) {
+        where.sellerApprovedAt.lte = new Date(filters.approvedBefore);
+      }
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { name: { contains: filters.search, mode: 'insensitive' } },
+        { businessName: { contains: filters.search, mode: 'insensitive' } },
+        { businessEmail: { contains: filters.search, mode: 'insensitive' } },
+        { email: { contains: filters.search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (filters.businessName) {
+      where.businessName = { contains: filters.businessName, mode: 'insensitive' };
+    }
+
+    if (filters.email) {
+      where.email = { contains: filters.email, mode: 'insensitive' };
+    }
+
+    const orderBy: any = {};
+    const sortBy = filters.sortBy || 'createdAt';
+    const sortOrder = filters.sortOrder || 'desc';
+    orderBy[sortBy] = sortOrder;
+
+    const totalItems = await prisma.user.count({ where });
+
+    const sellers = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        lastLoginAt: true,
+        isSeller: true,
+        sellerStatus: true,
+        sellerAppliedAt: true,
+        sellerApprovedAt: true,
+        sellerRejectedAt: true,
+        sellerRejectionReason: true,
+        businessName: true,
+        businessEmail: true,
+        businessPhone: true,
+        taxId: true,
+        sellerRating: true,
+        totalSales: true,
+        emailVerified: true,
+        phoneVerified: true,
+        store: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            storeStatus: true,
+            isActive: true,
+            createdAt: true,
+            _count: {
+              select: {
+                products: true,
+              },
+            },
+          },
+        },
+      },
+      ...getPrismaPaginationParams(paginationParams),
+      orderBy,
+    });
+
+    const data: IAdminSellerView[] = sellers.map(seller => ({
+      id: seller.id,
+      email: seller.email,
+      name: seller.name,
+      role: seller.role,
+      isActive: seller.isActive,
+      createdAt: seller.createdAt,
+      lastLoginAt: seller.lastLoginAt,
+      isSeller: seller.isSeller,
+      sellerStatus: seller.sellerStatus,
+      sellerAppliedAt: seller.sellerAppliedAt,
+      sellerApprovedAt: seller.sellerApprovedAt,
+      sellerRejectedAt: seller.sellerRejectedAt,
+      sellerRejectionReason: seller.sellerRejectionReason,
+      businessName: seller.businessName,
+      businessEmail: seller.businessEmail,
+      businessPhone: seller.businessPhone,
+      taxId: seller.taxId,
+      sellerRating: seller.sellerRating,
+      totalSales: seller.totalSales,
+      emailVerified: seller.emailVerified,
+      phoneVerified: seller.phoneVerified,
+      store: seller.store
+        ? {
+            id: seller.store.id,
+            name: seller.store.name,
+            slug: seller.store.slug,
+            storeStatus: seller.store.storeStatus,
+            isActive: seller.store.isActive,
+            productCount: seller.store._count.products,
+            createdAt: seller.store.createdAt,
+          }
+        : null,
+    }));
+
+    return createPaginatedResponse(data, totalItems, paginationParams);
+  };
+
+  suspendSeller = async (sellerId: string, reason: string, adminId: string) => {
+    if (!sellerId) {
+      throw new ApiError(400, 'SELLER_ID_MISSING', 'Seller id is missing');
+    }
+
+    if (!adminId) {
+      throw new ApiError(400, 'ADMIN_ID_MISSING', 'Admin id is missing');
+    }
+
+    if (!reason || reason.trim().length === 0) {
+      throw new ApiError(400, 'SUSPENSION_REASON_MISSING', 'Suspension reason is required');
+    }
+
+    const seller = await prisma.user.findUnique({
+      where: { id: sellerId },
+      select: {
+        id: true,
+        isSeller: true,
+        sellerStatus: true,
+        role: true,
+      },
+    });
+
+    if (!seller) {
+      throw new SellerError('SELLER_NOT_FOUND', 'Seller not found', 404);
+    }
+
+    if (!seller.isSeller) {
+      throw new SellerError('NOT_A_SELLER', 'This user is not a seller', 400);
+    }
+
+    if (seller.role === 'ADMIN') {
+      throw new SellerError('CANNOT_MODIFY_ADMIN', 'Cannot suspend an admin user', 400);
+    }
+
+    if (seller.sellerStatus === 'SUSPENDED') {
+      throw new SellerError('SELLER_ALREADY_SUSPENDED', 'Seller is already suspended', 400);
+    }
+
+    if (seller.sellerStatus !== 'APPROVED') {
+      throw new SellerError('SELLER_NOT_APPROVED', 'Only approved sellers can be suspended', 400);
+    }
+
+    const updatedSeller = await prisma.user.update({
+      where: { id: sellerId },
+      data: {
+        sellerStatus: 'SUSPENDED',
+        isActive: false,
+        sellerRejectionReason: reason.trim(), // Reusing this field for suspension reason
+      },
+    });
+
+    return updatedSeller;
+  };
+
+  unsuspendSeller = async (sellerId: string, adminId: string) => {
+    if (!sellerId) {
+      throw new ApiError(400, 'SELLER_ID_MISSING', 'Seller id is missing');
+    }
+
+    if (!adminId) {
+      throw new ApiError(400, 'ADMIN_ID_MISSING', 'Admin id is missing');
+    }
+
+    const seller = await prisma.user.findUnique({
+      where: { id: sellerId },
+      select: {
+        id: true,
+        isSeller: true,
+        sellerStatus: true,
+        role: true,
+      },
+    });
+
+    if (!seller) {
+      throw new SellerError('SELLER_NOT_FOUND', 'Seller not found', 404);
+    }
+
+    if (!seller.isSeller) {
+      throw new SellerError('NOT_A_SELLER', 'This user is not a seller', 400);
+    }
+
+    if (seller.role === 'ADMIN') {
+      throw new SellerError('CANNOT_MODIFY_ADMIN', 'Cannot modify an admin user', 400);
+    }
+
+    if (seller.sellerStatus !== 'SUSPENDED') {
+      throw new SellerError(
+        'SELLER_NOT_SUSPENDED',
+        'Only suspended sellers can be unsuspended',
+        400,
+      );
+    }
+
+    const updatedSeller = await prisma.user.update({
+      where: { id: sellerId },
+      data: {
+        sellerStatus: 'APPROVED',
+        isActive: true,
+        sellerRejectionReason: null, // Clear the suspension reason
+      },
+    });
+
+    return updatedSeller;
   };
 }
