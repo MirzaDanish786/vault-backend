@@ -48,6 +48,9 @@ prisma/dev.db-journal
 .vscode/
 .history/
 
+# Visual Studio
+.vs/
+
 # Mac system files
 .DS_Store
 
