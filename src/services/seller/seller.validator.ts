@@ -44,13 +44,31 @@ export const sellerApplicationSchema = z.object({
 
   privacyPolicyAccepted: z.literal(true, { message: 'You must accept the privacy policy' }),
 });
+export const sellerIdSchema = z.string().cuid('Invalid store ID');
 
+export type SellerIdInput = z.infer<typeof sellerIdSchema>
 export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
 
 export class SellerValidator {
   static validateSellerApplicationInput(data: SellerApplicationInput): SellerApplicationInput {
     try {
       return sellerApplicationSchema.parse(data);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new SellerError(
+          SELLER_ERROR_CODES.VALIDATION_ERROR,
+          'Validation failed',
+          400,
+          error.issues,
+        );
+      }
+      throw error;
+    }
+  }
+
+  static validateId(id: SellerIdInput):SellerIdInput{
+     try {
+      return sellerIdSchema.parse(id);
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new SellerError(
