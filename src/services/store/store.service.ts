@@ -1,10 +1,24 @@
-import prisma from '@/lib/prisma/client';
-import { CreateStoreInput, StoreValidator, UpdateStoreInput } from './store.validator';
 import slugify from 'slugify';
-import { IStore, IUpdateStoreInput } from './store.type';
-import { STORE_ERROR_CODES, StoreError } from '@/errors/store.error';
-import { logger } from '@/utils/logger';
+
 import { SellerValidator } from '../seller/seller.validator';
+
+import { IStore, IUpdateStoreInput, IPaginatedStores } from './store.type';
+import {
+  CreateStoreInput,
+  StoreValidator,
+  UpdateStoreInput,
+  StoreFilters,
+} from './store.validator';
+
+import { STORE_ERROR_CODES, StoreError } from '@/errors/store.error';
+import { Prisma } from '@/generated/prisma/client';
+import prisma from '@/lib/prisma/client';
+import { logger } from '@/utils/logger';
+import {
+  createPaginatedResponse,
+  getPrismaPaginationParams,
+  parsePaginationParams,
+} from '@/utils/pagination';
 
 export class StoreService {
   private generateUniqueSlug = async (name: string): Promise<string> => {
@@ -19,11 +33,12 @@ export class StoreService {
     return slug;
   };
 
-  createStore = async (input: CreateStoreInput): Promise<IStore> => {
+  createStore = async (sellerId: string, input: CreateStoreInput): Promise<IStore> => {
     const validatedData = StoreValidator.validateCreate(input);
+    const validateSellerId = SellerValidator.validateId(sellerId);
 
     const seller = await prisma.user.findUnique({
-      where: { id: validatedData.sellerId },
+      where: { id: validateSellerId },
       select: {
         id: true,
         isSeller: true,
@@ -73,7 +88,7 @@ export class StoreService {
         slug,
         logoUrl: validatedData.logoUrl,
         bannerUrl: validatedData.bannerUrl,
-        sellerId: validatedData.sellerId,
+        sellerId: sellerId,
         storeStatus: 'DRAFT',
         isActive: true,
       },
@@ -86,7 +101,7 @@ export class StoreService {
 
     logger.info('Store created successfully', {
       storeId: store.id,
-      sellerId: validatedData.sellerId,
+      sellerId: sellerId,
     });
 
     return {
@@ -373,5 +388,143 @@ export class StoreService {
     };
   };
 
-  getStoresByFilters = async () => {};
+  /**
+   * Get store by ID (Public endpoint)
+   * Anyone can view any store - this is standard e-commerce behavior
+   * Like viewing a store on Amazon or Etsy
+   */
+  getStoreByIdPublic = async (storeId: string, includeSeller: boolean = false): Promise<IStore> => {
+    const validatedStoreId = StoreValidator.validateId(storeId);
+
+    const store = await prisma.store.findUnique({
+      where: { id: validatedStoreId },
+      include: {
+        _count: {
+          select: { products: true },
+        },
+        ...(includeSeller && {
+          seller: {
+            select: {
+              id: true,
+              name: true,
+              businessName: true,
+              sellerRating: true,
+              createdAt: true,
+            },
+          },
+        }),
+      },
+    });
+
+    if (!store) {
+      logger.warn('Store not found for public view', { storeId: validatedStoreId });
+      throw new StoreError(STORE_ERROR_CODES.STORE_NOT_FOUND, 'Store not found');
+    }
+
+    logger.info('Store viewed publicly', {
+      storeId: validatedStoreId,
+      storeName: store.name,
+      includeSeller,
+    });
+
+    return {
+      ...store,
+      productCount: store._count.products,
+    };
+  };
+
+  getStoresByFilters = async (filters: StoreFilters): Promise<IPaginatedStores> => {
+    const validatedFilters = StoreValidator.validateFilters(filters);
+    const { page, limit, search, isActive, storeStatus, sellerId, includeProducts } =
+      validatedFilters;
+
+    const paginationParams = parsePaginationParams(page, limit);
+
+    // Build where clause
+    const where: Prisma.StoreWhereInput = {};
+
+    if (isActive !== undefined) {
+      where.isActive = isActive;
+    }
+
+    if (storeStatus) {
+      where.storeStatus = storeStatus;
+    }
+
+    if (sellerId) {
+      const validatedSellerId = StoreValidator.validateSellerId(sellerId);
+      where.sellerId = validatedSellerId;
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    // Get total count and stores
+    const [stores, totalItems] = await Promise.all([
+      prisma.store.findMany({
+        where,
+        ...getPrismaPaginationParams(paginationParams),
+        orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
+        include: {
+          _count: {
+            select: { products: true },
+          },
+          ...(includeProducts && {
+            seller: {
+              select: {
+                id: true,
+                name: true,
+                businessName: true,
+                sellerRating: true,
+              },
+            },
+          }),
+        },
+      }),
+      prisma.store.count({ where }),
+    ]);
+
+    logger.info('Stores fetched successfully', {
+      count: stores.length,
+      totalItems,
+      filters: validatedFilters,
+    });
+
+    const data: IStore[] = stores.map(store => ({
+      id: store.id,
+      name: store.name,
+      slug: store.slug,
+      description: store.description,
+      logoUrl: store.logoUrl,
+      bannerUrl: store.bannerUrl,
+      isActive: store.isActive,
+      storeStatus: store.storeStatus,
+      sellerId: store.sellerId,
+      createdAt: store.createdAt,
+      updatedAt: store.updatedAt,
+      productCount: store._count.products,
+      ...('seller' in store && { seller: store.seller }),
+    }));
+
+    const response = createPaginatedResponse(data, totalItems, paginationParams);
+
+    return {
+      data: response.data,
+      pagination: {
+        page: response.pagination.currentPage,
+        limit: response.pagination.itemsPerPage,
+        total: response.pagination.totalItems,
+        totalPages: response.pagination.totalPages,
+        hasNextPage: response.pagination.hasNextPage,
+        hasPreviousPage: response.pagination.hasPreviousPage,
+      },
+    };
+  };
 }
+
+export const storeService = new StoreService();

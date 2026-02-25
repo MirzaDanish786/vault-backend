@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 
-import type { Permission, UserRole } from '@/config/constants';
-import { ROLE_PERMISSIONS } from '@/config/constants';
+import type { UserRole } from '@/config/constants';
+import type { Permission } from '@/config/permissions';
+import { ROLE_PERMISSIONS, hasPermission } from '@/config/permissions';
 import { supabaseServer } from '@/config/supabase/server-client';
 import prisma from '@/lib/prisma/client';
 // import { UserRole } from "@/services/auth";
@@ -189,15 +190,28 @@ export const requirePermission = (permission: Permission) => {
     }
     const userPermissions = ROLE_PERMISSIONS[req.user.role] ?? [];
     if (!hasPermission(userPermissions, permission)) {
+      logger.warn('Insufficient permissions', {
+        requestId: req.requestId,
+        userId: req.user.id,
+        userRole: req.user.role,
+        requiredPermission: permission,
+        path: req.path,
+      });
+
       return ApiResponse.send(
         res,
         ApiResponse.forbidden('INSUFFICIENT_PERMISSIONS', `Missing permission: ${permission}`, {
           required: permission,
-          userPermissions,
+          userRole: req.user.role,
         }),
       );
     }
-    logger.debug('Role check passed');
+
+    logger.debug('Permission check passed', {
+      requestId: req.requestId,
+      userId: req.user.id,
+      permission,
+    });
 
     next();
   };
@@ -229,8 +243,3 @@ const extractToken = (req: Request): string | null => {
 
   return null;
 };
-
-const hasPermission = (userPermissions: readonly Permission[], required: string): boolean =>
-  userPermissions.some(
-    p => p === required || (p.endsWith('.*') && required.startsWith(p.slice(0, -2))),
-  );
