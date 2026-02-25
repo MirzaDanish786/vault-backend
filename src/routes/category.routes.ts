@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import { PERMISSIONS } from '@/config/constants';
+import { PERMISSIONS } from '@/config/permissions';
 import { categoryController } from '@/controllers/category.controller';
 import { authenticate, requirePermission } from '@/middlewares/auth.middleware';
 import { metaDataApiResponse } from '@/middlewares/meta-data.middleware';
