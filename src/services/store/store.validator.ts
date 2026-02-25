@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { StoreStatus } from '@/generated/prisma/enums';
 import { STORE_ERROR_CODES, StoreError } from '@/errors/store.error';
+import { StoreStatus } from '@/generated/prisma/enums';
 
 export const storeStatusEnum = z.nativeEnum(StoreStatus);
 
@@ -18,8 +18,7 @@ export const createStoreSchema = z.object({
 
   bannerUrl: z.string().url('Invalid banner URL').optional(),
 
-  sellerId: z.string().uuid('Invalid seller ID'),
-  
+  // sellerId: z.string().uuid('Invalid seller ID'),
 });
 
 export const updateStoreSchema = z.object({
@@ -144,4 +143,3 @@ export class StoreValidator {
     }
   }
 }
-

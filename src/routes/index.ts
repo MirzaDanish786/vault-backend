@@ -5,6 +5,7 @@ import categoryRoutes from './category.routes';
 import documentRoutes from './document.route';
 import healthRoutes from './health.routes';
 import sellerRoutes from './seller.route';
+import storeRoutes from './store.routes';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/categories', categoryRoutes);
 router.use('/', documentRoutes);
 
 router.use('/sellers', sellerRoutes);
+router.use('/stores', storeRoutes);
 
 export default router;
