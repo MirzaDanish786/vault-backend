@@ -44,9 +44,9 @@ export const sellerApplicationSchema = z.object({
 
   privacyPolicyAccepted: z.literal(true, { message: 'You must accept the privacy policy' }),
 });
-export const sellerIdSchema = z.string().cuid('Invalid store ID');
+export const sellerIdSchema = z.string().uuid('Invalid seller ID');
 
-export type SellerIdInput = z.infer<typeof sellerIdSchema>
+export type SellerIdInput = z.infer<typeof sellerIdSchema>;
 export type SellerApplicationInput = z.infer<typeof sellerApplicationSchema>;
 
 export class SellerValidator {
@@ -66,8 +66,8 @@ export class SellerValidator {
     }
   }
 
-  static validateId(id: SellerIdInput):SellerIdInput{
-     try {
+  static validateId(id: SellerIdInput): SellerIdInput {
+    try {
       return sellerIdSchema.parse(id);
     } catch (error) {
       if (error instanceof z.ZodError) {
