@@ -90,7 +90,7 @@ A production-ready Node.js/TypeScript backend for a modern e-commerce platform w
 - 📄 File Uploads - Cloud storage for product images
 - 📊 Analytics - User behavior tracking
 - 🔔 Real-time Notifications - WebSocket support
-- 🧪 Comprehensive Testing - Unit & integration tests
+- 🧪 Comprehensive Testing - Unit and integration tests
 - 🐳 Docker Support - Containerization
 - 📝 API Documentation - Swagger/OpenAPI specs
 - 📱 Mobile Optimization - API optimizations for mobile
